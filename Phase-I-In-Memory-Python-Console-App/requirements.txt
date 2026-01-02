@@ -1,0 +1,2 @@
+# TodoFlow Dependencies
+prompt_toolkit>=3.0.0
