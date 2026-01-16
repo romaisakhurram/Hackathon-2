@@ -38,11 +38,21 @@ export default function SignUpPage() {
         password,
       });
 
-      toast.success('Account created successfully!');
+      toast.success('Account created successfully! Redirecting to dashboard...');
       router.push('/dashboard');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Sign up error:', error);
-      toast.error('An error occurred during sign up. Please try again.');
+
+      // Check for specific error messages from the backend
+      if (error.message.includes('Email already exists') || error.message.includes('User already exists')) {
+        toast.error('Email already exists. Please use a different email or sign in to your existing account.');
+      } else if (error.message.includes('Invalid email')) {
+        toast.error('Invalid email format. Please enter a valid email address.');
+      } else if (error.message.includes('Password too weak') || error.message.includes('Password too short')) {
+        toast.error('Password is too weak. Please use at least 6 characters.');
+      } else {
+        toast.error('Sign up failed. Please check your information and try again.');
+      }
     } finally {
       setIsLoading(false);
     }

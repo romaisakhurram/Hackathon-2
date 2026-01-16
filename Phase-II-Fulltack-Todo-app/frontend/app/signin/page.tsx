@@ -28,9 +28,17 @@ export default function SignInPage() {
       // After successful sign in, wait a bit for session to establish, then navigate to dashboard
       await new Promise(resolve => setTimeout(resolve, 800));
       router.push('/dashboard');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Sign in error:', error);
-      toast.error('Invalid credentials. Please try again.');
+
+      // Check for specific error messages from the backend
+      if (error.message.includes('Invalid credentials') || error.message.includes('Invalid email') || error.message.includes('Incorrect password')) {
+        toast.error('Invalid email or password. Please try again.');
+      } else if (error.message.includes('Email not found') || error.message.includes('User not found')) {
+        toast.error('Email not found. Please check your email or sign up for an account.');
+      } else {
+        toast.error('Sign in failed. Please check your credentials and try again.');
+      }
     } finally {
       setIsLoading(false);
     }
