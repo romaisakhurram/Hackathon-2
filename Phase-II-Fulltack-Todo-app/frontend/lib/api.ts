@@ -80,7 +80,8 @@ class ApiClient {
 
         // Don't immediately redirect - let the calling code handle this gracefully
         // The better-auth library should handle session invalidation internally
-        if (!options?.skipRedirect) {
+        const skipRedirect = (options as any)?.skipRedirect; // Type assertion to handle custom property
+        if (!skipRedirect) {
           // Since this is synchronous and we can't await getSession() here,
           // we'll let the calling component handle the redirect
           // The calling function should catch the error and decide to redirect
@@ -134,14 +135,60 @@ class ApiClient {
     return this.request(endpoint, { method: 'POST', body: JSON.stringify(transformedData) });
   };
 
-  put = (endpoint: string, data: any) =>
-    this.request(endpoint, { method: 'PUT', body: JSON.stringify(data) });
+  put = (endpoint: string, data: any) => {
+    // Transform priority from string to number if present
+    const transformedData = { ...data };
+    if (transformedData.priority) {
+      switch (transformedData.priority) {
+        case 'low':
+          transformedData.priority = 1;
+          break;
+        case 'medium':
+          transformedData.priority = 2;
+          break;
+        case 'high':
+          transformedData.priority = 3;
+          break;
+        default:
+          // If it's already a number, leave it as is
+          if (typeof transformedData.priority === 'number') {
+            break;
+          }
+          // Default to medium if unknown value
+          transformedData.priority = 2;
+      }
+    }
+    return this.request(endpoint, { method: 'PUT', body: JSON.stringify(transformedData) });
+  };
 
   delete = (endpoint: string) =>
     this.request(endpoint, { method: 'DELETE' });
 
-  patch = (endpoint: string, data: any) =>
-    this.request(endpoint, { method: 'PATCH', body: JSON.stringify(data) });
+  patch = (endpoint: string, data: any) => {
+    // Transform priority from string to number if present
+    const transformedData = { ...data };
+    if (transformedData.priority) {
+      switch (transformedData.priority) {
+        case 'low':
+          transformedData.priority = 1;
+          break;
+        case 'medium':
+          transformedData.priority = 2;
+          break;
+        case 'high':
+          transformedData.priority = 3;
+          break;
+        default:
+          // If it's already a number, leave it as is
+          if (typeof transformedData.priority === 'number') {
+            break;
+          }
+          // Default to medium if unknown value
+          transformedData.priority = 2;
+      }
+    }
+    return this.request(endpoint, { method: 'PATCH', body: JSON.stringify(transformedData) });
+  };
 }
 
 export const apiClient = new ApiClient();

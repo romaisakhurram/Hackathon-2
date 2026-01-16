@@ -19,24 +19,14 @@ export default function HomePage() {
 
         console.log('Main page session object:', session);
 
-        // Check if session exists and is valid based on better-auth client response structure
+        // Check if session exists and is valid based on our SimpleAuthClient response structure
         let isAuthenticated = false;
 
         if (session && typeof session === 'object') {
-          // Check if session has data property (better-auth client format)
-          if (session.data && typeof session.data === 'object') {
-            // This is the better-auth client format: {data: {...}, error: null}
-            // The actual session info is in session.data
-            const sessionData = session.data;
-
-            // Check if it's authenticated based on the data structure
-            isAuthenticated = sessionData.authenticated === true &&
-                             sessionData.error === null;
-          } else {
-            // Direct session format (backend endpoint format): {authenticated: ..., error: ...}
-            isAuthenticated = session.authenticated === true &&
-                             session.error === null;
-          }
+          // Our SimpleAuthClient.getSession() returns either:
+          // - { user: { id: any }, token: string } if authenticated
+          // - null if not authenticated
+          isAuthenticated = true; // If we got a session object, it means user is authenticated
         }
 
         if (isAuthenticated) {

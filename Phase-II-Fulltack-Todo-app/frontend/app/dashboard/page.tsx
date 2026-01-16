@@ -221,34 +221,23 @@ export default function DashboardPage() {
   };
 
   const startEditingTask = (task: Task) => {
-    // Convert numeric priority to string for UI
-    let priorityString: 'low' | 'medium' | 'high' = 'medium'; // default
-    if (task.priority === 1) priorityString = 'low';
-    else if (task.priority === 2) priorityString = 'medium';
-    else if (task.priority === 3) priorityString = 'high';
-
+    // Task.priority is already a string ('low' | 'medium' | 'high'), no conversion needed
     setEditingTask({
       id: task.id,
       title: task.title,
       description: task.description || '',
-      priority: priorityString
+      priority: task.priority
     });
   };
 
   const handleUpdateTask = async () => {
     if (!editingTask) return;
 
-    // Convert priority string to number for backend compatibility
-    let priorityValue = 0;
-    if (editingTask.priority === 'low') priorityValue = 1;
-    else if (editingTask.priority === 'medium') priorityValue = 2;
-    else if (editingTask.priority === 'high') priorityValue = 3;
-
     try {
       const updatedTask = await apiClient.put(`/api/tasks/${editingTask.id}`, {
         title: editingTask.title,
         description: editingTask.description,
-        priority: priorityValue,
+        priority: editingTask.priority, // apiClient will handle the conversion to number
       });
 
       setTasks(tasks.map(task =>
