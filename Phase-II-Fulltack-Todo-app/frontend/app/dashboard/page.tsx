@@ -97,7 +97,16 @@ export default function DashboardPage() {
     try {
       setLoading(true);
       const response = await apiClient.get('/api/tasks/');
-      setTasks(response || []);
+
+      // Convert numeric priorities to string for UI display
+      const tasksWithConvertedPriorities = response.map((task: any) => ({
+        ...task,
+        priority: task.priority === 1 ? 'low' :
+                 task.priority === 2 ? 'medium' :
+                 task.priority === 3 ? 'high' : 'medium'
+      }));
+
+      setTasks(tasksWithConvertedPriorities || []);
     } catch (error) {
       console.error('Error fetching tasks:', error);
 
@@ -125,11 +134,17 @@ export default function DashboardPage() {
       return;
     }
 
+    // Convert priority string to number for backend compatibility
+    let priorityValue = 0;
+    if (newTaskPriority === 'low') priorityValue = 1;
+    else if (newTaskPriority === 'medium') priorityValue = 2;
+    else if (newTaskPriority === 'high') priorityValue = 3;
+
     try {
       const newTask = await apiClient.post('/api/tasks/', {
         title: newTaskTitle,
         description: newTaskDescription,
-        priority: newTaskPriority,
+        priority: priorityValue,
       });
 
       setTasks([...tasks, newTask]);
@@ -206,22 +221,34 @@ export default function DashboardPage() {
   };
 
   const startEditingTask = (task: Task) => {
+    // Convert numeric priority to string for UI
+    let priorityString: 'low' | 'medium' | 'high' = 'medium'; // default
+    if (task.priority === 1) priorityString = 'low';
+    else if (task.priority === 2) priorityString = 'medium';
+    else if (task.priority === 3) priorityString = 'high';
+
     setEditingTask({
       id: task.id,
       title: task.title,
       description: task.description || '',
-      priority: task.priority as 'low' | 'medium' | 'high'
+      priority: priorityString
     });
   };
 
   const handleUpdateTask = async () => {
     if (!editingTask) return;
 
+    // Convert priority string to number for backend compatibility
+    let priorityValue = 0;
+    if (editingTask.priority === 'low') priorityValue = 1;
+    else if (editingTask.priority === 'medium') priorityValue = 2;
+    else if (editingTask.priority === 'high') priorityValue = 3;
+
     try {
       const updatedTask = await apiClient.put(`/api/tasks/${editingTask.id}`, {
         title: editingTask.title,
         description: editingTask.description,
-        priority: editingTask.priority,
+        priority: priorityValue,
       });
 
       setTasks(tasks.map(task =>
