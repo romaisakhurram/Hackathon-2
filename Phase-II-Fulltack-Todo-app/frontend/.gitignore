@@ -4,6 +4,7 @@ node_modules/
 # Production builds
 .next/
 out/
+.env/
 
 # Environment variables
 .env*

@@ -33,7 +33,7 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# ✅ FIXED CORS: Added all possible local origins
+# ✅ FIXED CORS: Added all possible local origins with explicit configuration
 origins = [
     "http://localhost:3000",
     "http://localhost:3001",
@@ -41,6 +41,8 @@ origins = [
     "http://127.0.0.1:8000",
     "http://127.0.0.1:8001",
     "http://127.0.0.1:8002",
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",  # Additional variations
 ]
 
 app.add_middleware(
@@ -49,42 +51,85 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],  # Allow all headers to ensure Authorization header passes through
+    # Add exposed headers to allow frontend to access response headers
+    expose_headers=["Access-Control-Allow-Origin", "Content-Type", "Authorization"]
 )
 
 from starlette.datastructures import Headers
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 
-# Custom middleware to handle cookie-based authentication for better-auth compatibility
+# Custom middleware to handle authentication for API requests
 @app.middleware("http")
-async def handle_auth_cookies(request: Request, call_next):
+async def handle_auth(request: Request, call_next):
     # Check if this is an API request that requires authentication
     if request.url.path.startswith('/api/') and request.method in ['GET', 'POST', 'PUT', 'PATCH', 'DELETE']:
-        # Check for authentication token in cookies if not in header
-        if not request.headers.get("Authorization"):
-            # Look for common better-auth cookie names
+        # Check for authentication token in Authorization header first
+        auth_header = request.headers.get("Authorization")
+
+        if auth_header and auth_header.startswith("Bearer "):
+            # Extract token from Authorization header
+            token = auth_header[7:]  # Remove "Bearer " prefix
+            request.state.auth_token = token
+            print(f"Using token from Authorization header")  # Debug log
+        elif auth_header:  # If there's an Authorization header but it doesn't start with "Bearer "
+            # Just use whatever is in the Authorization header
+            request.state.auth_token = auth_header
+            print(f"Using token from Authorization header (no Bearer prefix)")  # Debug log
+        else:
+            # If no Authorization header, check for common cookie names
             cookie_token = None
+            cookie_name_found = None
             cookie_names = [
+                # Common better-auth cookie patterns
+                "better-auth.session_token",
                 "better-auth.session",
                 "better-auth-session",
+                "__Secure-authjs.session-token",
                 "authjs.session-token",
                 "auth_token",
                 "better_auth_token",
                 "token",
-                "session"
+                "session",
+                # Try generic session cookies that might be used
+                "session_token",
+                "__session",
+                # Additional authjs tokens
+                "next-auth.session-token",
+                "authjs.csrf-token",
+                "authjs.callback-url",
             ]
 
+            # Look for the cookie
             for cookie_name in cookie_names:
                 if cookie_name in request.cookies:
                     cookie_token = request.cookies[cookie_name]
+                    cookie_name_found = cookie_name
                     break
 
-            # If we found a token in cookies, add it to the request state to be accessed by dependencies
+            # If we still don't have a token, check for any cookie that might be a JWT
+            if not cookie_token:
+                for cookie_name, cookie_value in request.cookies.items():
+                    if cookie_value and cookie_value.startswith(('ey', 'eyJ')):  # JWTs start with 'ey' or 'eyJ'
+                        cookie_token = cookie_value
+                        cookie_name_found = cookie_name
+                        break
+
+            # If we found a token in cookies, add it to the request state
             if cookie_token:
-                # Store the token in the request state for later use
-                request.state.auth_token = f'Bearer {cookie_token}'
+                request.state.auth_token = cookie_token
+                print(f"Found authentication token in cookie: {cookie_name_found}")  # Debug log
+            else:
+                print(f"No authentication token found. Headers: {list(request.headers.keys())}, Cookies: {list(request.cookies.keys())}")  # Debug log
 
     response = await call_next(request)
+
+    # Explicitly set CORS headers on the response to ensure they're present
+    response.headers["Access-Control-Allow-Origin"] = request.headers.get("origin", "")
+    response.headers["Access-Control-Allow-Credentials"] = "true"
+    response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
+    response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, PATCH, OPTIONS"
+
     return response
 
 
@@ -114,3 +159,13 @@ async def health_check():
         "status": "healthy" if db_healthy else "degraded",
         "db": "healthy" if db_healthy else "unhealthy"
     }
+
+# Add an explicit OPTIONS handler for preflight requests
+@app.options("/{full_path:path}")
+async def cors_options(request: Request):
+    response = JSONResponse(content={})
+    response.headers["Access-Control-Allow-Origin"] = request.headers.get("origin", "")
+    response.headers["Access-Control-Allow-Credentials"] = "true"
+    response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
+    response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, PATCH, OPTIONS"
+    return response

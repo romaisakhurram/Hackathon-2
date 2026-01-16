@@ -32,19 +32,14 @@ export default function SignUpPage() {
     setIsLoading(true);
 
     try {
-      const result = await signUp.email({
+      await signUp({
         name,
         email,
         password,
-        callbackURL: '/dashboard',
       });
 
-      if (result?.error) {
-        toast.error(result.error);
-      } else {
-        toast.success('Account created successfully!');
-        router.push('/dashboard');
-      }
+      toast.success('Account created successfully!');
+      router.push('/dashboard');
     } catch (error) {
       console.error('Sign up error:', error);
       toast.error('An error occurred during sign up. Please try again.');

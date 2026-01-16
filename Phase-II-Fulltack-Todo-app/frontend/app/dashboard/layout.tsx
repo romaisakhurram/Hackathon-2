@@ -81,12 +81,6 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             <div>
               <h1 className="text-xl font-semibold text-slate-900">Dashboard</h1>
             </div>
-            <div className="flex items-center space-x-4">
-              <Button onClick={() => router.push('/dashboard/new')}>
-                <Plus className="h-4 w-4 mr-2" />
-                New Task
-              </Button>
-            </div>
           </div>
         </header>
 

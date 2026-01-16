@@ -39,24 +39,21 @@ def init_engines():
     # Determine if we should use PostgreSQL or fallback to SQLite
     if DATABASE_URL.startswith("postgresql"):
         print("Detected PostgreSQL URL, attempting to initialize engines...")
-        # Try to use PostgreSQL with proper parameters for asyncpg
+        # Try to use PostgreSQL with proper parameters for psycopg2
         try:
-            # For asyncpg, we need to ensure the URL has the correct driver format
-            # and remove unsupported parameters like sslmode and channel_binding
+            # For psycopg2, we need to ensure the URL has the correct driver format
             async_db_url = DATABASE_URL
-            if not DATABASE_URL.startswith("postgresql+asyncpg://"):
-                # Convert standard PostgreSQL URL to asyncpg format
-                async_db_url = DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://", 1)
+            if not DATABASE_URL.startswith("postgresql+psycopg2://"):
+                # Convert standard PostgreSQL URL to psycopg2 format
+                async_db_url = DATABASE_URL.replace("postgresql://", "postgresql+psycopg2://", 1)
 
-            # Remove unsupported parameters for asyncpg
-            if "sslmode=" in async_db_url or "channel_binding=" in async_db_url:
-                # Parse and remove unsupported parameters
+            # Remove unsupported parameters for psycopg2 if present
+            if "sslmode=" in async_db_url:
                 import urllib.parse
                 parsed = urllib.parse.urlparse(async_db_url)
                 query_params = urllib.parse.parse_qs(parsed.query)
 
-                # Remove unsupported parameters
-                query_params.pop('sslmode', None)
+                # Remove unsupported parameters if needed
                 query_params.pop('channel_binding', None)
 
                 # Reconstruct the query string
@@ -73,7 +70,7 @@ def init_engines():
             print(f"Async DB URL: {async_db_url[:50]}...")  # Debug: print first 50 chars
 
             async_engine = create_async_engine(
-                async_db_url,  # URL with asyncpg driver
+                async_db_url,  # URL with psycopg2 driver
                 echo=False,
                 pool_size=5,
                 max_overflow=10,
@@ -84,7 +81,7 @@ def init_engines():
 
             # Sync engine for non-async operations if needed
             from sqlalchemy.pool import QueuePool  # Use standard QueuePool for sync engine
-            sync_db_url = async_db_url.replace("postgresql+asyncpg://", "postgresql://")
+            sync_db_url = async_db_url.replace("postgresql+psycopg2://", "postgresql://")
             sync_engine = create_engine(
                 sync_db_url,
                 echo=False,

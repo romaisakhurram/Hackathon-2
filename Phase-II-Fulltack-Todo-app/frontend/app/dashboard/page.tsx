@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { apiClient } from '@/lib/api';
 import { getSession, signOut } from '@/lib/auth-client';
 import { toast } from 'sonner';
-import { Plus, Check, X, AlertCircle, MoreVertical, Search, Filter, Calendar, User } from 'lucide-react';
+import { Plus, Check, X, AlertCircle, MoreVertical, Search, Filter, Calendar, User, Edit } from 'lucide-react';
 import { Task } from '@/types/task';
 
 export default function DashboardPage() {
@@ -16,6 +16,7 @@ export default function DashboardPage() {
   const [newTaskPriority, setNewTaskPriority] = useState<'low' | 'medium' | 'high'>('medium');
   const [loading, setLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [editingTask, setEditingTask] = useState<{id: string, title: string, description: string, priority: 'low' | 'medium' | 'high'} | null>(null);
   const router = useRouter();
 
   // Check if user is authenticated and maintain session
@@ -28,20 +29,8 @@ export default function DashboardPage() {
 
         console.log('Full session object:', session);
 
-        // Check if session is valid based on the requirement:
-        // session !== null, session.data !== null, session.error === null
-        let isValidSession = false;
-
-        if (session && typeof session === 'object') {
-          // Check if session has data property (better-auth client format)
-          if (session.data && typeof session.data === 'object') {
-            // For better-auth client: {data: {...}, error: null}
-            isValidSession = session.data !== null && session.error === null;
-          } else {
-            // For direct format: {authenticated: ..., error: ...}
-            isValidSession = session !== null && session.error === null;
-          }
-        }
+        // Our new auth client returns either null (not authenticated) or an object with user info
+        const isValidSession = session !== null;
 
         if (isValidSession) {
           console.log('Authentication verified, loading tasks');
@@ -55,6 +44,8 @@ export default function DashboardPage() {
         }
       } catch (error) {
         console.error('Authentication check failed:', error);
+        // Clear any stored token to ensure clean state
+        localStorage.removeItem('auth_token');
         if (isMounted) {
           router.push('/signin');
         }
@@ -72,31 +63,23 @@ export default function DashboardPage() {
 
           console.log('Periodic session check:', session);
 
-          // Check if session is still valid
-          let isValidSession = false;
-
-          if (session && typeof session === 'object') {
-            // Check if session has data property (better-auth client format)
-            if (session.data && typeof session.data === 'object') {
-              // For better-auth client: {data: {...}, error: null}
-              isValidSession = session.data !== null && session.error === null;
-            } else {
-              // For direct format: {authenticated: ..., error: ...}
-              isValidSession = session !== null && session.error === null;
-            }
-          }
+          // Our new auth client returns either null (not authenticated) or an object with user info
+          const isValidSession = session !== null;
 
           if (!isValidSession) {
             console.log('Session validation failed, redirecting to sign in');
             console.log('Session data:', session);
+            // Clear any stored token to ensure clean state
+            localStorage.removeItem('auth_token');
             if (isMounted) {
               router.push('/signin');
             }
           }
         } catch (error) {
           console.error('Periodic auth check failed:', error);
-          // Only redirect if there's a consistent authentication issue
-          if (isMounted && error instanceof Error && error.message.includes('Unauthorized')) {
+          // Clear any stored token to ensure clean state and redirect
+          localStorage.removeItem('auth_token');
+          if (isMounted) {
             router.push('/signin');
           }
         }
@@ -113,7 +96,7 @@ export default function DashboardPage() {
   const fetchTasks = async () => {
     try {
       setLoading(true);
-      const response = await apiClient.get('/api/tasks/', { skipRedirect: true });
+      const response = await apiClient.get('/api/tasks/');
       setTasks(response || []);
     } catch (error) {
       console.error('Error fetching tasks:', error);
@@ -122,6 +105,10 @@ export default function DashboardPage() {
       if (error instanceof Error && error.message.includes('Unauthorized')) {
         // Don't show toast for auth errors, let the session monitoring handle it
         console.log('Authentication error detected, letting session monitoring handle redirect');
+        // Clear any stored token to ensure clean state
+        localStorage.removeItem('auth_token');
+        // Redirect to sign in
+        router.push('/signin');
       } else {
         toast.error('Failed to load tasks');
       }
@@ -153,7 +140,17 @@ export default function DashboardPage() {
       toast.success('Task added successfully');
     } catch (error) {
       console.error('Error adding task:', error);
-      toast.error('Failed to add task');
+
+      // Check if this is an authentication error
+      if (error instanceof Error && error.message.includes('Unauthorized')) {
+        console.log('Authentication error detected when adding task');
+        // Clear any stored token to ensure clean state
+        localStorage.removeItem('auth_token');
+        // Redirect to sign in
+        router.push('/signin');
+      } else {
+        toast.error('Failed to add task');
+      }
     }
   };
 
@@ -169,7 +166,17 @@ export default function DashboardPage() {
       toast.success(`Task ${newStatus === 'completed' ? 'completed' : 'marked as pending'}`);
     } catch (error) {
       console.error('Error updating task:', error);
-      toast.error('Failed to update task');
+
+      // Check if this is an authentication error
+      if (error instanceof Error && error.message.includes('Unauthorized')) {
+        console.log('Authentication error detected when toggling task');
+        // Clear any stored token to ensure clean state
+        localStorage.removeItem('auth_token');
+        // Redirect to sign in
+        router.push('/signin');
+      } else {
+        toast.error('Failed to update task');
+      }
     }
   };
 
@@ -184,8 +191,63 @@ export default function DashboardPage() {
       toast.success('Task deleted successfully');
     } catch (error) {
       console.error('Error deleting task:', error);
-      toast.error('Failed to delete task');
+
+      // Check if this is an authentication error
+      if (error instanceof Error && error.message.includes('Unauthorized')) {
+        console.log('Authentication error detected when deleting task');
+        // Clear any stored token to ensure clean state
+        localStorage.removeItem('auth_token');
+        // Redirect to sign in
+        router.push('/signin');
+      } else {
+        toast.error('Failed to delete task');
+      }
     }
+  };
+
+  const startEditingTask = (task: Task) => {
+    setEditingTask({
+      id: task.id,
+      title: task.title,
+      description: task.description || '',
+      priority: task.priority as 'low' | 'medium' | 'high'
+    });
+  };
+
+  const handleUpdateTask = async () => {
+    if (!editingTask) return;
+
+    try {
+      const updatedTask = await apiClient.put(`/api/tasks/${editingTask.id}`, {
+        title: editingTask.title,
+        description: editingTask.description,
+        priority: editingTask.priority,
+      });
+
+      setTasks(tasks.map(task =>
+        task.id === editingTask.id ? updatedTask : task
+      ));
+
+      setEditingTask(null);
+      toast.success('Task updated successfully');
+    } catch (error) {
+      console.error('Error updating task:', error);
+
+      // Check if this is an authentication error
+      if (error instanceof Error && error.message.includes('Unauthorized')) {
+        console.log('Authentication error detected when updating task');
+        // Clear any stored token to ensure clean state
+        localStorage.removeItem('auth_token');
+        // Redirect to sign in
+        router.push('/signin');
+      } else {
+        toast.error('Failed to update task');
+      }
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditingTask(null);
   };
 
   const handleLogout = async () => {
@@ -325,73 +387,136 @@ export default function DashboardPage() {
           <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
             <div className="divide-y divide-slate-100">
               {tasks.map((task) => (
-                <div key={task.id} className="p-6 hover:bg-slate-50 transition-colors">
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-start space-x-3">
-                      <button
-                        onClick={() => handleToggleComplete(task.id, task.status)}
-                        className={`flex-shrink-0 w-5 h-5 rounded border mt-0.5 flex items-center justify-center ${
-                          task.status === 'completed'
-                            ? 'bg-green-500 border-green-500 text-white'
-                            : 'border-slate-300'
-                        }`}
-                        aria-label={task.status === 'completed' ? 'Mark as incomplete' : 'Mark as complete'}
-                      >
-                        {task.status === 'completed' && <Check className="h-4 w-4" />}
-                      </button>
-                      <div className="min-w-0 flex-1">
-                        <h3 className={`text-sm font-medium ${
-                          task.status === 'completed'
-                            ? 'text-slate-500 line-through'
-                            : 'text-slate-900'
-                        }`}>
-                          {task.title}
-                        </h3>
-                        {task.description && (
-                          <p className={`text-sm mt-1 ${
-                            task.status === 'completed'
-                              ? 'text-slate-400 line-through'
-                              : 'text-slate-500'
-                          }`}>
-                            {task.description}
-                          </p>
-                        )}
-                        <div className="flex items-center mt-2 space-x-2">
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                            task.priority === 'high'
-                              ? 'bg-red-100 text-red-800'
-                              : task.priority === 'medium'
-                                ? 'bg-yellow-100 text-yellow-800'
-                                : 'bg-green-100 text-green-800'
-                          }`}>
-                            {task.priority}
-                          </span>
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                            task.status === 'completed'
-                              ? 'bg-green-100 text-green-800'
-                              : task.status === 'in-progress'
-                                ? 'bg-blue-100 text-blue-800'
-                                : 'bg-slate-100 text-slate-800'
-                          }`}>
-                            {task.status}
-                          </span>
-                          <span className="text-xs text-slate-500">
-                            {new Date(task.created_at).toLocaleDateString()}
-                          </span>
-                        </div>
+                editingTask && editingTask.id === task.id ? (
+                  // Edit form for the task
+                  <div key={task.id} className="p-6 bg-slate-50 border border-slate-200 rounded-lg m-4">
+                    <div className="space-y-4">
+                      <div>
+                        <label htmlFor={`edit-title-${task.id}`} className="block text-sm font-medium text-slate-700 mb-1">
+                          Task Title
+                        </label>
+                        <input
+                          id={`edit-title-${task.id}`}
+                          type="text"
+                          value={editingTask.title}
+                          onChange={(e) => setEditingTask({...editingTask, title: e.target.value})}
+                          className="w-full px-3 py-2 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                          placeholder="What needs to be done?"
+                        />
+                      </div>
+                      <div>
+                        <label htmlFor={`edit-description-${task.id}`} className="block text-sm font-medium text-slate-700 mb-1">
+                          Description
+                        </label>
+                        <textarea
+                          id={`edit-description-${task.id}`}
+                          value={editingTask.description}
+                          onChange={(e) => setEditingTask({...editingTask, description: e.target.value})}
+                          className="w-full px-3 py-2 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                          placeholder="Add details..."
+                          rows={2}
+                        />
+                      </div>
+                      <div>
+                        <label htmlFor={`edit-priority-${task.id}`} className="block text-sm font-medium text-slate-700 mb-1">
+                          Priority
+                        </label>
+                        <select
+                          id={`edit-priority-${task.id}`}
+                          value={editingTask.priority}
+                          onChange={(e) => setEditingTask({...editingTask, priority: e.target.value as 'low' | 'medium' | 'high'})}
+                          className="w-full px-3 py-2 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                        >
+                          <option value="low">Low</option>
+                          <option value="medium">Medium</option>
+                          <option value="high">High</option>
+                        </select>
+                      </div>
+                      <div className="flex space-x-3 pt-2">
+                        <Button onClick={handleUpdateTask}>Save Changes</Button>
+                        <Button type="button" variant="outline" onClick={handleCancelEdit}>
+                          Cancel
+                        </Button>
                       </div>
                     </div>
-                    <div className="flex items-center space-x-2">
-                      <button
-                        onClick={() => handleDeleteTask(task.id)}
-                        className="text-slate-400 hover:text-red-500 transition-colors p-1 rounded hover:bg-red-50"
-                        aria-label="Delete task"
-                      >
-                        <X className="h-4 w-4" />
-                      </button>
+                  </div>
+                ) : (
+                  // Display task normally
+                  <div key={task.id} className="p-6 hover:bg-slate-50 transition-colors">
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-start space-x-3">
+                        <button
+                          onClick={() => handleToggleComplete(task.id, task.status)}
+                          className={`flex-shrink-0 w-5 h-5 rounded border mt-0.5 flex items-center justify-center ${
+                            task.status === 'completed'
+                              ? 'bg-green-500 border-green-500 text-white'
+                              : 'border-slate-300'
+                          }`}
+                          aria-label={task.status === 'completed' ? 'Mark as incomplete' : 'Mark as complete'}
+                        >
+                          {task.status === 'completed' && <Check className="h-4 w-4" />}
+                        </button>
+                        <div className="min-w-0 flex-1">
+                          <h3 className={`text-sm font-medium ${
+                            task.status === 'completed'
+                              ? 'text-slate-500 line-through'
+                              : 'text-slate-900'
+                          }`}>
+                            {task.title}
+                          </h3>
+                          {task.description && (
+                            <p className={`text-sm mt-1 ${
+                              task.status === 'completed'
+                                ? 'text-slate-400 line-through'
+                                : 'text-slate-500'
+                            }`}>
+                              {task.description}
+                            </p>
+                          )}
+                          <div className="flex items-center mt-2 space-x-2">
+                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                              task.priority === 'high'
+                                ? 'bg-red-100 text-red-800'
+                                : task.priority === 'medium'
+                                  ? 'bg-yellow-100 text-yellow-800'
+                                  : 'bg-green-100 text-green-800'
+                            }`}>
+                              {task.priority}
+                            </span>
+                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                              task.status === 'completed'
+                                ? 'bg-green-100 text-green-800'
+                                : task.status === 'in-progress'
+                                  ? 'bg-blue-100 text-blue-800'
+                                  : 'bg-slate-100 text-slate-800'
+                            }`}>
+                              {task.status}
+                            </span>
+                            <span className="text-xs text-slate-500">
+                              {new Date(task.created_at).toLocaleDateString()}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <button
+                          onClick={() => startEditingTask(task)}
+                          className="text-slate-400 hover:text-indigo-500 transition-colors p-1 rounded hover:bg-slate-100"
+                          aria-label="Edit task"
+                        >
+                          <Edit className="h-4 w-4" />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteTask(task.id)}
+                          className="text-slate-400 hover:text-red-500 transition-colors p-1 rounded hover:bg-red-50"
+                          aria-label="Delete task"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
                     </div>
                   </div>
-                </div>
+                )
               ))}
             </div>
           </div>

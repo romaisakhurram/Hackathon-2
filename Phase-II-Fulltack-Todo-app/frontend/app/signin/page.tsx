@@ -18,25 +18,19 @@ export default function SignInPage() {
     setIsLoading(true);
 
     try {
-      const result = await signIn.email({
+      await signIn({
         email,
         password,
-        callbackURL: '/dashboard',
       });
 
-      if (result?.error) {
-        toast.error('Invalid credentials. Please try again.');
-      } else {
-        toast.success('Signed in successfully!');
+      toast.success('Signed in successfully!');
 
-        // After successful sign in, wait a bit for session to establish, then navigate to dashboard
-        // This gives better-auth time to set up the session properly
-        await new Promise(resolve => setTimeout(resolve, 800));
-        router.push('/dashboard');
-      }
+      // After successful sign in, wait a bit for session to establish, then navigate to dashboard
+      await new Promise(resolve => setTimeout(resolve, 800));
+      router.push('/dashboard');
     } catch (error) {
       console.error('Sign in error:', error);
-      toast.error('An error occurred during sign in. Please try again.');
+      toast.error('Invalid credentials. Please try again.');
     } finally {
       setIsLoading(false);
     }

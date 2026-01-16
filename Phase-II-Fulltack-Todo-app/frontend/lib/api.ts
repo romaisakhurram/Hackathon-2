@@ -9,36 +9,30 @@ class ApiClient {
     // Normalize endpoint (ensure it starts with /)
     const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
 
+    // Ensure baseUrl is properly formatted
+    let normalizedBaseUrl = this.baseUrl;
+    if (!normalizedBaseUrl.startsWith('http://') && !normalizedBaseUrl.startsWith('https://')) {
+      normalizedBaseUrl = `http://${normalizedBaseUrl}`;
+    }
+    // Ensure baseUrl doesn't end with a slash
+    if (normalizedBaseUrl.endsWith('/')) {
+      normalizedBaseUrl = normalizedBaseUrl.slice(0, -1);
+    }
+
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
       ...(options.headers as Record<string, string>)
     };
 
-    // Get session from the existing auth client to check if user is authenticated
-    let token: string | undefined;
-    let isAuthenticated = false;
+    // Get the token directly from localStorage to ensure it's available
+    const token = localStorage.getItem('auth_token');
 
-    try {
-      const sessionResponse = await getSession();
-
-      // Check if user is authenticated
-      if (sessionResponse && typeof sessionResponse === 'object' && 'user' in sessionResponse) {
-        // Check for authentication status - user exists means authenticated
-          isAuthenticated = !!sessionResponse.user;
-  
-          // Extract token if available - better-auth uses cookie-based auth primarily
-          if ('token' in sessionResponse && typeof sessionResponse.token === 'string') {
-            token = sessionResponse.token;
-          }
-      }
-    } catch (error) {
-      console.error('❌ Auth Session Fetch Error:', error);
-      isAuthenticated = false;
-    }
-
-    // Add token to headers if available, but rely primarily on cookie-based auth
+    // Add authentication token to headers if available
     if (token) {
       headers['Authorization'] = `Bearer ${token}`;
+      console.log('Added authentication token to request'); // Debug log
+    } else {
+      console.log('No authentication token found'); // Debug log
     }
 
     // Prepare fetch options with credentials (for cookie-based auth)
@@ -49,12 +43,40 @@ class ApiClient {
       credentials: 'include', // Critical: Include cookies for session management
     };
 
-    const response = await fetch(`${this.baseUrl}${cleanEndpoint}`, fetchOptions);
+    const fullUrl = `${normalizedBaseUrl}${cleanEndpoint}`;
+    console.log(`Making request to: ${fullUrl}`); // Debug log
+    console.log('Headers:', headers); // Debug log
+    console.log('Credentials:', 'include'); // Debug log
+    console.log('Token available:', !!token); // Debug log
+
+    // Validate URL before making request
+    try {
+      new URL(fullUrl); // This will throw if the URL is invalid
+    } catch (urlError) {
+      console.error('Invalid URL:', fullUrl, urlError);
+      throw new Error(`Invalid API URL: ${fullUrl}`);
+    }
+
+    const response = await fetch(fullUrl, fetchOptions);
 
     if (!response.ok) {
       // Handle Unauthorized specifically
       if (response.status === 401) {
         console.error("🚫 401 Unauthorized: Invalid or expired session");
+
+        // Clear the token since it's invalid
+        localStorage.removeItem('auth_token');
+
+        // Attempt to get more details about the error
+        let errorDetails = '';
+        try {
+          const errorResponse = await response.json();
+          errorDetails = errorResponse.detail || errorResponse.message || 'Unknown error';
+        } catch (e) {
+          errorDetails = response.statusText || 'Unable to parse error';
+        }
+
+        console.error('Error details:', errorDetails);
 
         // Don't immediately redirect - let the calling code handle this gracefully
         // The better-auth library should handle session invalidation internally
@@ -65,10 +87,19 @@ class ApiClient {
         }
 
         // Throw an error that can be caught by the calling function
-        throw new Error('Unauthorized: Session may have expired');
+        throw new Error(`Unauthorized: ${errorDetails}`);
       }
 
-      const errorData = await response.json().catch(() => ({}));
+      // Try to get error details from response
+      let errorData;
+      try {
+        errorData = await response.json();
+      } catch (e) {
+        // If response is not JSON, use status text
+        errorData = { detail: response.statusText };
+      }
+
+      console.error(`API Error ${response.status}:`, errorData);
       throw new Error(errorData.detail || errorData.message || `Error ${response.status}`);
     }
 
@@ -76,17 +107,40 @@ class ApiClient {
   };
 
   get = (endpoint: string) => this.request(endpoint, { method: 'GET' });
-  
-  post = (endpoint: string, data: any) => 
-    this.request(endpoint, { method: 'POST', body: JSON.stringify(data) });
 
-  put = (endpoint: string, data: any) => 
+  post = (endpoint: string, data: any) => {
+    // Transform priority from string to number if present
+    const transformedData = { ...data };
+    if (transformedData.priority) {
+      switch (transformedData.priority) {
+        case 'low':
+          transformedData.priority = 1;
+          break;
+        case 'medium':
+          transformedData.priority = 2;
+          break;
+        case 'high':
+          transformedData.priority = 3;
+          break;
+        default:
+          // If it's already a number, leave it as is
+          if (typeof transformedData.priority === 'number') {
+            break;
+          }
+          // Default to medium if unknown value
+          transformedData.priority = 2;
+      }
+    }
+    return this.request(endpoint, { method: 'POST', body: JSON.stringify(transformedData) });
+  };
+
+  put = (endpoint: string, data: any) =>
     this.request(endpoint, { method: 'PUT', body: JSON.stringify(data) });
 
-  delete = (endpoint: string) => 
+  delete = (endpoint: string) =>
     this.request(endpoint, { method: 'DELETE' });
 
-  patch = (endpoint: string, data: any) => 
+  patch = (endpoint: string, data: any) =>
     this.request(endpoint, { method: 'PATCH', body: JSON.stringify(data) });
 }
 

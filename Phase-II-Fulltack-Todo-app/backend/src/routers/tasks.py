@@ -3,7 +3,7 @@ from sqlmodel import select, Session, delete
 from typing import List
 from ..models.task import Task
 from ..schemas.task import TaskCreate, TaskUpdate, TaskResponse
-from ..dependencies import get_current_user_id, validate_token_expiration
+from ..dependencies import get_current_user_id
 from ..database import get_async_session
 from sqlmodel.ext.asyncio.session import AsyncSession
 from sqlalchemy import and_

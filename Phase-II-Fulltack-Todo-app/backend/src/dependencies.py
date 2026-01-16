@@ -83,14 +83,14 @@ def get_token_with_fallback(request: Request) -> str:
     """
     Extract and return the token from the authorization header or from request state (for cookie fallback).
     """
-    # First, try to get token from the Authorization header using HTTPBearer
-    try:
-        # Try to get the credentials from the header
-        auth_header = request.headers.get("Authorization")
-        if auth_header and auth_header.startswith("Bearer "):
+    # First, try to get token from the Authorization header
+    auth_header = request.headers.get("Authorization")
+    if auth_header:
+        if auth_header.startswith("Bearer "):
             return auth_header[7:]  # Remove "Bearer " prefix
-    except:
-        pass
+        else:
+            # If it doesn't have "Bearer " prefix, return the whole header value
+            return auth_header
 
     # If not in header, check if the middleware stored a token in the request state
     if hasattr(request, 'state') and hasattr(request.state, 'auth_token'):
@@ -101,8 +101,7 @@ def get_token_with_fallback(request: Request) -> str:
                 return token[7:]
             return token
 
-    # If no token found, use the original HTTPBearer approach to raise appropriate error
-    auth_credentials = HTTPAuthorizationCredentials(scheme="Bearer", credentials="")
+    # If no token found, raise appropriate error
     raise HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="No authentication token provided",
@@ -183,109 +182,5 @@ async def validate_token_expiration(request: Request):
     return payload
 
 
-# Additionally, create alternative functions that work with the request object to check cookies
-def get_token_with_fallback():
-    """
-    Create a dependency function that can check both Authorization header and cookies.
-    This function will work with the request object to access cookies.
-    """
-    async def token_dependency(request: Request) -> str:
-        # First, try to get token from Authorization header
-        auth_header = request.headers.get("Authorization")
-        if auth_header and auth_header.startswith("Bearer "):
-            return auth_header[7:]  # Remove "Bearer " prefix
-
-        # Then, try to get token from cookies (common with better-auth)
-        # Check for common better-auth cookie names
-        cookie_names = [
-            "better-auth.session",  # Most common better-auth cookie name
-            "better-auth-session",
-            "authjs.session-token",  # Alternative authjs token
-            "auth_token",
-            "better_auth_token",
-            "token",
-            "session"
-        ]
-
-        for cookie_name in cookie_names:
-            token_cookie = request.cookies.get(cookie_name)
-            if token_cookie:
-                return token_cookie
-
-        # If no token found anywhere, raise 401
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="No authentication token provided",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-
-    return token_dependency
-
-
-# Get the dependency function
-get_token_from_request = get_token_with_fallback()
-
-
-def get_current_user_id_from_request(request: Request) -> uuid.UUID:
-    """
-    Get the current user ID from the JWT token, checking both header and cookies.
-    This function works with the request object to access both headers and cookies.
-    """
-    # Get the token (from header or cookie)
-    token = get_token_from_request(request)
-
-    payload = verify_token(token)
-    user_id: str = payload.get("user_id")
-
-    if user_id is None:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Could not validate credentials",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-
-    try:
-        return uuid.UUID(user_id)
-    except ValueError:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid user ID in token",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-
-
-async def validate_token_expiration_from_request(request: Request):
-    """
-    Validate token expiration to ensure 24-hour expiry as per NFR-003.
-    This function works with the request object to access both headers and cookies.
-    """
-    # Get the token (from header or cookie)
-    token = get_token_from_request(request)
-
-    payload = verify_token(token)
-    exp: int = payload.get("exp")
-
-    if exp:
-        expiration_time = datetime.fromtimestamp(exp)
-        current_time = datetime.utcnow()
-
-        # Check if token has expired
-        if current_time > expiration_time:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Token has expired",
-                headers={"WWW-Authenticate": "Bearer"},
-            )
-
-        # Check if token was issued more than 24 hours ago (NFR-003)
-        iat: int = payload.get("iat")
-        if iat:
-            issued_time = datetime.fromtimestamp(iat)
-            if (current_time - issued_time) > timedelta(hours=24):
-                raise HTTPException(
-                    status_code=status.HTTP_401_UNAUTHORIZED,
-                    detail="Token issued more than 24 hours ago (NFR-003)",
-                    headers={"WWW-Authenticate": "Bearer"},
-                )
-
-    return payload
+# The duplicate validate_token_expiration function has been removed to prevent conflicts.
+# The original validate_token_expiration function (defined at line 144) should be sufficient.
