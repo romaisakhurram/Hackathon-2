@@ -1,0 +1,213 @@
+# Chat API Contract for Todo AI Chatbot
+
+openapi: 3.0.0
+info:
+  title: Chat API for Todo AI Chatbot
+  version: 1.0.0
+  description: Stateless API for persistent chatbot conversations
+
+paths:
+  /api/{user_id}/chat:
+    post:
+      summary: Process a chat message and return AI response
+      description: |
+        Stateless endpoint for chat interactions that persists conversations.
+        All messages are stored in the database to ensure continuity after service restarts.
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          description: The ID of the authenticated user (from JWT token)
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChatRequest'
+      responses:
+        '200':
+          description: Successful response with AI-generated message
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatResponse'
+        '401':
+          description: Unauthorized - Invalid or missing JWT token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - User attempting to access another user's conversation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too Many Requests - Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        - BearerAuth: []
+      x-rate-limit:
+        requests: 10
+        window: 60
+        identifier: user_id
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    # Request body schema
+    ChatRequest:
+      type: object
+      properties:
+        conversation_id:
+          type: integer
+          description: Optional ID of the existing conversation to continue
+          nullable: true
+        message:
+          type: string
+          description: The user's message to the chatbot
+          minLength: 1
+          maxLength: 2000
+      required:
+        - message
+      example:
+        conversation_id: 123
+        message: "Add a task to buy groceries"
+
+    # Response body schema
+    ChatResponse:
+      type: object
+      properties:
+        conversation_id:
+          type: integer
+          description: ID of the conversation (newly created or existing)
+        response:
+          type: string
+          description: The AI-generated response to the user's message
+        tool_calls:
+          type: array
+          description: List of tool calls executed as part of the response
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+                description: Name of the tool that was called
+              parameters:
+                type: object
+                description: Parameters passed to the tool
+              result:
+                type: object
+                description: Result returned by the tool
+            required:
+              - name
+              - parameters
+              - result
+        message_id:
+          type: integer
+          description: ID of the AI response message that was saved
+      required:
+        - conversation_id
+        - response
+        - tool_calls
+      example:
+        conversation_id: 123
+        response: "I've added the task 'buy groceries' to your list."
+        tool_calls:
+          - name: "add_task"
+            parameters: {"title": "buy groceries", "priority": "medium"}
+            result: {"id": "abc123", "title": "buy groceries", "status": "pending"}
+        message_id: 456
+
+    # Common error response
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message
+        code:
+          type: string
+          description: Error code
+      required:
+        - error
+        - code
+      example:
+        error: "Conversation not found or access denied"
+        code: "CONVERSATION_ACCESS_DENIED"
+
+    # Conversation model used internally
+    Conversation:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Unique identifier for the conversation
+        user_id:
+          type: string
+          description: ID of the user who owns this conversation
+        created_at:
+          type: string
+          format: date-time
+          description: Timestamp when the conversation was created
+        updated_at:
+          type: string
+          format: date-time
+          description: Timestamp when the conversation was last updated
+        title:
+          type: string
+          description: Optional title for the conversation
+          nullable: true
+      required:
+        - id
+        - user_id
+        - created_at
+        - updated_at
+
+    # Message model used internally
+    Message:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Unique identifier for the message
+        conversation_id:
+          type: integer
+          description: Reference to the conversation this message belongs to
+        user_id:
+          type: string
+          description: ID of the user who sent this message (sender)
+        role:
+          type: string
+          enum: [user, assistant]
+          description: Role of the message sender (user for human, assistant for AI)
+        content:
+          type: string
+          description: The actual message content
+          maxLength: 2000
+        created_at:
+          type: string
+          format: date-time
+          description: Timestamp when the message was created
+        metadata:
+          type: object
+          description: Additional metadata for the message (e.g., tool calls)
+          nullable: true
+      required:
+        - id
+        - conversation_id
+        - user_id
+        - role
+        - content
+        - created_at

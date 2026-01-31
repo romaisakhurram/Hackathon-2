@@ -1,0 +1,329 @@
+# MCP Tools Contract for Todo AI Chatbot
+
+openapi: 3.0.0
+info:
+  title: MCP Tools for Todo AI Chatbot
+  version: 1.0.0
+  description: Standardized tools for AI agent to interact with todo backend
+
+paths:
+  # This contract defines the MCP tools interface
+  # Actual HTTP paths are handled internally by the MCP protocol
+
+components:
+  schemas:
+    # Common error response
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message
+        code:
+          type: string
+          description: Error code
+      required:
+        - error
+        - code
+
+    # Task object used across all tools
+    # Matches the existing backend Task model: id, title, description, priority(int), status, timestamps, user_id
+    Task:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique task identifier
+        title:
+          type: string
+          description: Task title/description
+        description:
+          type: string
+          description: Task description (nullable)
+          nullable: true
+        completed:
+          type: boolean
+          description: Whether task is completed (derived from status field)
+        priority:
+          type: string
+          enum: [low, medium, high]
+          description: Task priority level (converted from integer: 1=low, 2=medium, 3=high)
+        status:
+          type: string
+          enum: [pending, completed]
+          description: Task status (pending or completed)
+        created_at:
+          type: string
+          format: date-time
+          description: Timestamp when task was created
+        updated_at:
+          type: string
+          format: date-time
+          description: Timestamp when task was last updated
+          nullable: true
+        user_id:
+          type: string
+          description: ID of the user who owns this task
+      required:
+        - id
+        - title
+        - completed
+        - priority
+        - status
+        - user_id
+
+    # add_task tool
+    AddTaskRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          description: The task title/description
+          minLength: 1
+        description:
+          type: string
+          description: Task description (optional)
+        priority:
+          type: string
+          enum: [low, medium, high]
+          description: Priority level (optional)
+          default: medium
+      required:
+        - title
+
+    AddTaskResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique task identifier
+        title:
+          type: string
+          description: Task title/description
+        description:
+          type: string
+          description: Task description (nullable)
+          nullable: true
+        completed:
+          type: boolean
+          description: Whether task is completed (false for new tasks)
+        priority:
+          type: string
+          enum: [low, medium, high]
+          description: Task priority level
+        status:
+          type: string
+          enum: [pending, completed]
+          description: Task status (pending for new tasks)
+        created_at:
+          type: string
+          format: date-time
+          description: Timestamp when task was created
+        updated_at:
+          type: string
+          format: date-time
+          description: Timestamp when task was last updated
+          nullable: true
+        user_id:
+          type: string
+          description: ID of the user who owns this task
+      required:
+        - id
+        - title
+        - completed
+        - priority
+        - status
+        - user_id
+
+    # list_tasks tool
+    ListTasksResponse:
+      type: object
+      properties:
+        tasks:
+          type: array
+          items:
+            $ref: '#/components/schemas/Task'
+      required:
+        - tasks
+
+    # update_task tool
+    UpdateTaskRequest:
+      type: object
+      properties:
+        task_id:
+          type: string
+          description: ID of the task to update
+          minLength: 1
+        title:
+          type: string
+          description: New task title/description (optional)
+          minLength: 1
+        description:
+          type: string
+          description: New task description (optional)
+        priority:
+          type: string
+          enum: [low, medium, high]
+          description: New priority level (optional)
+        completed:
+          type: boolean
+          description: Completion status (optional)
+      required:
+        - task_id
+
+    UpdateTaskResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique task identifier
+        title:
+          type: string
+          description: Task title/description
+        description:
+          type: string
+          description: Task description (nullable)
+          nullable: true
+        completed:
+          type: boolean
+          description: Whether task is completed
+        priority:
+          type: string
+          enum: [low, medium, high]
+          description: Task priority level
+        status:
+          type: string
+          enum: [pending, completed]
+          description: Task status (pending or completed)
+        updated_at:
+          type: string
+          format: date-time
+          description: Timestamp when task was last updated
+        user_id:
+          type: string
+          description: ID of the user who owns this task
+      required:
+        - id
+        - title
+        - completed
+        - priority
+        - status
+        - user_id
+
+    # complete_task tool
+    CompleteTaskRequest:
+      type: object
+      properties:
+        task_id:
+          type: string
+          description: ID of the task to mark as completed
+          minLength: 1
+      required:
+        - task_id
+
+    CompleteTaskResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique task identifier
+        title:
+          type: string
+          description: Task title/description
+        description:
+          type: string
+          description: Task description (nullable)
+          nullable: true
+        completed:
+          type: boolean
+          description: Whether task is completed (true for completed tasks)
+        priority:
+          type: string
+          enum: [low, medium, high]
+          description: Task priority level
+        status:
+          type: string
+          enum: [pending, completed]
+          description: Task status (completed)
+        updated_at:
+          type: string
+          format: date-time
+          description: Timestamp when task was last updated
+        user_id:
+          type: string
+          description: ID of the user who owns this task
+      required:
+        - id
+        - title
+        - completed
+        - priority
+        - status
+        - user_id
+
+    # delete_task tool
+    DeleteTaskRequest:
+      type: object
+      properties:
+        task_id:
+          type: string
+          description: ID of the task to delete
+          minLength: 1
+      required:
+        - task_id
+
+    DeleteTaskResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          description: Whether the deletion was successful
+      required:
+        - success
+
+# Tool definitions following MCP specification
+x-mcp-tools:
+  add_task:
+    description: Create a new task for the authenticated user
+    input_schema:
+      $ref: '#/components/schemas/AddTaskRequest'
+    output_schema:
+      $ref: '#/components/schemas/AddTaskResponse'
+    error_schema:
+      $ref: '#/components/schemas/ErrorResponse'
+
+  list_tasks:
+    description: Retrieve all tasks for the authenticated user
+    input_schema:
+      type: object
+      properties: {}
+    output_schema:
+      $ref: '#/components/schemas/ListTasksResponse'
+    error_schema:
+      $ref: '#/components/schemas/ErrorResponse'
+
+  update_task:
+    description: Modify an existing task for the authenticated user
+    input_schema:
+      $ref: '#/components/schemas/UpdateTaskRequest'
+    output_schema:
+      $ref: '#/components/schemas/UpdateTaskResponse'
+    error_schema:
+      $ref: '#/components/schemas/ErrorResponse'
+
+  complete_task:
+    description: Mark a task as completed for the authenticated user
+    input_schema:
+      $ref: '#/components/schemas/CompleteTaskRequest'
+    output_schema:
+      $ref: '#/components/schemas/CompleteTaskResponse'
+    error_schema:
+      $ref: '#/components/schemas/ErrorResponse'
+
+  delete_task:
+    description: Remove a task for the authenticated user
+    input_schema:
+      $ref: '#/components/schemas/DeleteTaskRequest'
+    output_schema:
+      $ref: '#/components/schemas/DeleteTaskResponse'
+    error_schema:
+      $ref: '#/components/schemas/ErrorResponse'
