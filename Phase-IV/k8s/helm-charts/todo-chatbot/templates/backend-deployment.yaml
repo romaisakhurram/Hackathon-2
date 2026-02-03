@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: todo-backend
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: todo-backend
+spec:
+  replicas: {{ .Values.backend.replicaCount }}
+  selector:
+    matchLabels:
+      app: todo-backend
+  template:
+    metadata:
+      labels:
+        app: todo-backend
+    spec:
+      containers:
+      - name: backend
+        image: "{{ .Values.backend.image.repository }}:{{ .Values.backend.image.tag }}"
+        imagePullPolicy: {{ .Values.backend.image.pullPolicy }}
+        ports:
+        - containerPort: 8000
+        env:
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: todo-chatbot-secrets
+              key: database_url
+        - name: BETTER_AUTH_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: todo-chatbot-secrets
+              key: auth_secret
+        - name: FRONTEND_URL
+          value: {{ .Values.config.backend.FRONTEND_URL | quote }}
+        - name: LOG_LEVEL
+          value: {{ .Values.config.backend.LOG_LEVEL | quote }}
+        - name: WORKERS
+          value: {{ .Values.config.backend.WORKERS | quote }}
+        resources:
+{{ toYaml .Values.backend.resources | indent 10 }}
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 8000
+          initialDelaySeconds: 5
+          periodSeconds: 5

@@ -1,0 +1,76 @@
+# Default values for todo-chatbot
+
+frontend:
+  replicaCount: 2
+  image:
+    repository: todo-frontend
+    tag: latest
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 80
+  ingress:
+    enabled: true
+    className: nginx
+    hosts:
+      - host: todo-chatbot.local
+        paths:
+          - path: /
+            pathType: Prefix
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+
+backend:
+  replicaCount: 1
+  image:
+    repository: todo-backend
+    tag: latest
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 80
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    kubernetes.io/tls-acme: "true"
+  hosts:
+    - host: todo-chatbot.local
+      paths:
+        - path: /
+          pathType: Prefix
+        - path: /api
+          pathType: Prefix
+  tls: []
+  #  - secretName: todo-chatbot-tls
+  #    hosts:
+  #      - todo-chatbot.local
+
+config:
+  frontend:
+    NEXT_PUBLIC_API_URL: "http://backend-service.todo-chatbot.svc.cluster.local"
+    NODE_ENV: production
+  backend:
+    FRONTEND_URL: "http://frontend-service.todo-chatbot.svc.cluster.local"
+    LOG_LEVEL: info
+    WORKERS: "4"
+
+secrets:
+  # These should be provided separately or via sealed secrets
+  BETTER_AUTH_SECRET: ""
+  DATABASE_URL: ""
+  OPENAI_API_KEY: ""
