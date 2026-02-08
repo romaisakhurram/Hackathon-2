@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.final
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://neondb_owner:npg_iI4QRn6lawJe@ep-raspy-cake-absxlcnr-pooler.eu-west-2.aws.neon.tech/neondb?sslmode=require
+      - BETTER_AUTH_SECRET=26WiLoWkSbtmkwdrhRR3OutWgFFnx7sN
+      - BETTER_AUTH_URL=https://todo-with-chatbot.vercel.app/
+      - OPENAI_API_KEY=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
+      - OPENAI_BASE_URL=https://api.openai.com/v1/
+      - OPENAI_MODEL=mistralai/devstral-2512:free
+      - API_HOST=0.0.0.0
+      - DEBUG=true
+    volumes:
+      - ./backend/src:/src/src  # For development, to enable hot-reloading
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s

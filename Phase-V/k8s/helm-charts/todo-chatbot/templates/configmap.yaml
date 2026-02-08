@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: todo-chatbot-config
+  namespace: {{ .Release.Namespace }}
+data:
+  frontend-config.json: |-
+    {
+      "NEXT_PUBLIC_API_URL": {{ .Values.config.frontend.NEXT_PUBLIC_API_URL | quote }},
+      "NODE_ENV": {{ .Values.config.frontend.NODE_ENV | quote }}
+    }
+  backend-config.json: |-
+    {
+      "FRONTEND_URL": {{ .Values.config.backend.FRONTEND_URL | quote }},
+      "LOG_LEVEL": {{ .Values.config.backend.LOG_LEVEL | quote }},
+      "WORKERS": {{ .Values.config.backend.WORKERS | quote }}
+    }

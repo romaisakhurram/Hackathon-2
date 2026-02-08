@@ -1,0 +1,117 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: todo-postgres
+    environment:
+      POSTGRES_DB: todo_local
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./k8s/database/schema.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - todo-network
+
+  # Redis for caching and session storage
+  redis:
+    image: redis:7-alpine
+    container_name: todo-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - todo-network
+
+  # Kafka for messaging (if needed)
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    container_name: todo-zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    networks:
+      - todo-network
+
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    container_name: todo-kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    networks:
+      - todo-network
+
+  # Backend API
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: todo-backend
+    depends_on:
+      - postgres
+      - redis
+    ports:
+      - "8000:8000"
+    environment:
+      # Local database connection
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/todo_local
+      - BETTER_AUTH_SECRET=26WiLoWkSbtmkwdrhRR3OutWgFFnx7sNLocalDev
+      - BETTER_AUTH_URL=http://localhost:3000
+      - OPENAI_API_KEY=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
+      - OPENAI_BASE_URL=https://api.openai.com/v1/
+      - OPENAI_MODEL=mistralai/devstral-2512:free
+      - API_HOST=0.0.0.0
+      - DEBUG=true
+      # Redis configuration
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    volumes:
+      - ./backend/src:/src/src  # For development, to enable hot-reloading
+    restart: unless-stopped
+    networks:
+      - todo-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Frontend Application
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: todo-frontend
+    depends_on:
+      - backend
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+      - NEXT_PUBLIC_BETTER_AUTH_URL=http://localhost:8000
+    volumes:
+      - ./frontend/src:/app/src  # For development, to enable hot-reloading
+    restart: unless-stopped
+    networks:
+      - todo-network
+
+networks:
+  todo-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:

@@ -1,0 +1,369 @@
+openapi: 3.0.1
+info:
+  title: Todo Chatbot API
+  description: API for managing todos through a chatbot interface
+  version: 1.0.0
+servers:
+  - url: https://api.todo-chatbot.example.com/v1
+    description: Production server
+paths:
+  /users/{userId}/tasks:
+    get:
+      summary: Get all tasks for a user
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Unique identifier for the user
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, in-progress, completed]
+          description: Filter tasks by status
+      responses:
+        '200':
+          description: List of tasks for the user
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Task'
+        '401':
+          description: Unauthorized
+        '404':
+          description: User not found
+    post:
+      summary: Create a new task for a user
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Unique identifier for the user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTaskRequest'
+      responses:
+        '201':
+          description: Task created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '400':
+          description: Invalid request body
+        '401':
+          description: Unauthorized
+  /users/{userId}/tasks/{taskId}:
+    get:
+      summary: Get a specific task
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: taskId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Task details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '401':
+          description: Unauthorized
+        '404':
+          description: Task not found
+    put:
+      summary: Update a task
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: taskId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateTaskRequest'
+      responses:
+        '200':
+          description: Task updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '400':
+          description: Invalid request body
+        '401':
+          description: Unauthorized
+        '404':
+          description: Task not found
+    delete:
+      summary: Delete a task
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: taskId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Task deleted successfully
+        '401':
+          description: Unauthorized
+        '404':
+          description: Task not found
+  /chat/sessions:
+    post:
+      summary: Create a new chat session
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateSessionRequest'
+      responses:
+        '201':
+          description: Chat session created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatSession'
+        '401':
+          description: Unauthorized
+  /chat/sessions/{sessionId}/messages:
+    get:
+      summary: Get messages from a chat session
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of messages in the session
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Message'
+        '401':
+          description: Unauthorized
+        '404':
+          description: Session not found
+    post:
+      summary: Send a message in a chat session
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SendMessageRequest'
+      responses:
+        '201':
+          description: Message sent and response received
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+        '400':
+          description: Invalid message
+        '401':
+          description: Unauthorized
+        '404':
+          description: Session not found
+components:
+  schemas:
+    Task:
+      type: object
+      required:
+        - taskId
+        - title
+        - status
+        - ownerId
+        - createdAt
+      properties:
+        taskId:
+          type: string
+          description: Unique identifier for the task
+        title:
+          type: string
+          description: Title of the task
+        description:
+          type: string
+          description: Detailed description of the task
+        status:
+          type: string
+          enum: [pending, in-progress, completed]
+          description: Current status of the task
+        priority:
+          type: string
+          enum: [low, medium, high]
+          description: Priority level of the task
+        dueDate:
+          type: string
+          format: date-time
+          description: Due date for the task
+        ownerId:
+          type: string
+          description: ID of the user who owns the task
+        createdAt:
+          type: string
+          format: date-time
+          description: Timestamp when the task was created
+        updatedAt:
+          type: string
+          format: date-time
+          description: Timestamp when the task was last updated
+        completedAt:
+          type: string
+          format: date-time
+          description: Timestamp when the task was completed
+    CreateTaskRequest:
+      type: object
+      required:
+        - title
+      properties:
+        title:
+          type: string
+          maxLength: 100
+        description:
+          type: string
+          maxLength: 500
+        priority:
+          type: string
+          enum: [low, medium, high]
+          default: medium
+        dueDate:
+          type: string
+          format: date-time
+    UpdateTaskRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          maxLength: 100
+        description:
+          type: string
+          maxLength: 500
+        status:
+          type: string
+          enum: [pending, in-progress, completed]
+        priority:
+          type: string
+          enum: [low, medium, high]
+        dueDate:
+          type: string
+          format: date-time
+    ChatSession:
+      type: object
+      required:
+        - sessionId
+        - userId
+        - startedAt
+        - isActive
+      properties:
+        sessionId:
+          type: string
+          description: Unique identifier for the session
+        userId:
+          type: string
+          description: ID of the user associated with the session
+        startedAt:
+          type: string
+          format: date-time
+          description: Timestamp when the session started
+        endedAt:
+          type: string
+          format: date-time
+          description: Timestamp when the session ended
+        isActive:
+          type: boolean
+          description: Whether the session is currently active
+        metadata:
+          type: object
+          description: Additional session metadata
+    Message:
+      type: object
+      required:
+        - messageId
+        - sessionId
+        - senderType
+        - content
+        - timestamp
+      properties:
+        messageId:
+          type: string
+          description: Unique identifier for the message
+        sessionId:
+          type: string
+          description: ID of the session this message belongs to
+        senderType:
+          type: string
+          enum: [user, bot]
+          description: Indicates if message was sent by user or bot
+        content:
+          type: string
+          description: Content of the message
+        timestamp:
+          type: string
+          format: date-time
+          description: Timestamp when the message was sent
+        messageType:
+          type: string
+          enum: [text, command, notification]
+          description: Type of message
+    CreateSessionRequest:
+      type: object
+      required:
+        - userId
+      properties:
+        userId:
+          type: string
+          description: ID of the user creating the session
+        metadata:
+          type: object
+          description: Additional session metadata
+    SendMessageRequest:
+      type: object
+      required:
+        - content
+      properties:
+        content:
+          type: string
+          maxLength: 1000
+          description: Content of the message to send

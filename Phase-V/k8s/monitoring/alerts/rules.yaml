@@ -1,0 +1,54 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: alerting-rules
+  namespace: monitoring
+data:
+  alerting_rules.yml: |
+    groups:
+    - name: todo-app-alerts
+      rules:
+      - alert: TodoAppDown
+        expr: up{job="todo-backend"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Todo App is down"
+          description: "The Todo App has been down for more than 1 minute."
+
+      - alert: HighCPUUsage
+        expr: 100 - (avg by(instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High CPU usage detected"
+          description: "CPU usage is above 80% for more than 2 minutes on {{ $labels.instance }}."
+
+      - alert: HighMemoryUsage
+        expr: (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes) * 100 < 20
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High memory usage detected"
+          description: "Available memory is less than 20% on {{ $labels.instance }}."
+
+      - alert: TodoAppHighLatency
+        expr: histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le, service)) > 1
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High latency in Todo App"
+          description: "95th percentile of request latency is higher than 1 second for service {{ $labels.service }}."
+
+      - alert: TodoAppErrorRate
+        expr: rate(http_requests_total{status=~"5.."}[5m]) > 0.05
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High error rate in Todo App"
+          description: "Error rate is higher than 5% for the last 5 minutes."
