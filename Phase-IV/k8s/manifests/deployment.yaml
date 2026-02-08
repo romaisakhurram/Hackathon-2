@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend-deployment
+  namespace: default
+  labels:
+    app: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      containers:
+      - name: backend
+        image: backend:latest  # This will be built locally
+        ports:
+        - containerPort: 8000
+        env:
+        - name: OPENAI_MODEL
+          value: "mistralai/devstral-2512:free"
+        - name: API_HOST
+          value: "0.0.0.0"
+        - name: DEBUG
+          value: "true"
+        envFrom:
+        - secretRef:
+            name: app-secrets
+        volumeMounts:
+        - name: app-storage
+          mountPath: /src/data  # Mount point for persistent data
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 40
+          periodSeconds: 30
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 10
+          periodSeconds: 5
+      volumes:
+      - name: app-storage
+        persistentVolumeClaim:
+          claimName: app-storage

@@ -1,46 +1,40 @@
 #!/bin/bash
 
-# Deployment script for Todo Chatbot on Minikube
+# Script to deploy the application to Minikube with persistence
 
 set -e  # Exit on any error
 
-echo "Starting deployment of Todo Chatbot to Minikube..."
+echo "Starting deployment to Minikube..."
 
-# Check if minikube is running
-if ! minikube status &>/dev/null; then
-    echo "Starting Minikube..."
-    minikube start
-fi
+# 1. Enable storage provisioner
+echo "Enabling storage provisioner..."
+minikube addons enable storage-provisioner
+minikube addons enable default-storageclass
 
-# Check if kubectl is available
-if ! command -v kubectl &>/dev/null; then
-    echo "kubectl is not installed or not in PATH"
-    exit 1
-fi
+# 2. Set Docker environment to use Minikube's Docker daemon
+echo "Setting Docker environment to Minikube..."
+eval $(minikube docker-env)
 
-# Check if helm is available
-if ! command -v helm &>/dev/null; then
-    echo "Helm is not installed or not in PATH"
-    exit 1
-fi
+# 3. Build the Docker image
+echo "Building Docker image..."
+cd ../backend
+docker build -t backend:latest -f Dockerfile .
+cd ../k8s
 
-echo "Creating namespace..."
-kubectl create namespace todo-chatbot --dry-run=client -o yaml | kubectl apply -f -
+# 4. Apply Kubernetes manifests
+echo "Applying Kubernetes manifests..."
+kubectl apply -f manifests/
 
-echo "Installing Todo Chatbot Helm chart..."
-helm upgrade --install todo-chatbot ./k8s/helm-charts/todo-chatbot \
-    --namespace todo-chatbot \
-    --create-namespace \
-    --timeout=10m
+# 5. Wait for deployment to be ready
+echo "Waiting for deployment to be ready..."
+kubectl rollout status deployment/backend-deployment --timeout=300s
 
-echo "Waiting for deployments to be ready..."
-kubectl rollout status deployment/todo-frontend --namespace todo-chatbot --timeout=5m
-kubectl rollout status deployment/todo-backend --namespace todo-chatbot --timeout=5m
+# 6. Get service information
+echo "Service details:"
+kubectl get svc backend-service
 
-echo "Checking pod status..."
-kubectl get pods -n todo-chatbot
+# 7. Get Minikube IP to access the service
+echo "Minikube IP:"
+minikube ip
 
-echo "Deployment completed successfully!"
-echo "Access the application:"
-echo "Frontend: $(minikube service frontend-service -n todo-chatbot --url)"
-echo "Backend: $(minikube service backend-service -n todo-chatbot --url)"
+echo "Deployment completed! Access your application at: http://$(minikube ip):80"

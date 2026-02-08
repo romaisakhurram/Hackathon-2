@@ -1,0 +1,92 @@
+# Kubernetes Manifest for Backend Application with Persistence
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: app-secrets
+  namespace: default
+type: Opaque
+data:
+  DATABASE_URL: cG9zdGdyZXNxbDovL25lb25kYl9vd25lcjpwZ2lfaUk0UVJuNmxhd0plQGVwLXJhc3B5LWNha2UtYWJzeGxjbnItcG9vbGVyLmV1LXdlc3QtMi5hd3MubmVvbi50ZWNoL25lb25kYj9zc2xtb2RlPXJlcXVpcmU=
+  BETTER_AUTH_SECRET: MjZXaUxvV2tTYnRta3dkcmhSUjNPdXRXZ0ZGbnhnc04=
+  OPENAI_API_KEY: c2stb3ItdjEtNzQxZGQ3NDVkZmFlMDZiYjdhZjFjYWY1NjY1OGMwNjQ2ZTY2YzA3MTZiYjU0OWZhODY2Yjg3MWRlZGYxOTg4OQ==
+  BETTER_AUTH_URL: aHR0cHM6Ly90b2RvLXdpdGgtY2hhdGJvdC52ZXJjZWwuc2pp
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: app-storage
+  namespace: default
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+  storageClassName: standard
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend-deployment
+  namespace: default
+  labels:
+    app: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      containers:
+      - name: backend
+        image: backend:latest  # This will be built locally
+        ports:
+        - containerPort: 8000
+        env:
+        - name: OPENAI_MODEL
+          value: "mistralai/devstral-2512:free"
+        - name: API_HOST
+          value: "0.0.0.0"
+        - name: DEBUG
+          value: "true"
+        envFrom:
+        - secretRef:
+            name: app-secrets
+        volumeMounts:
+        - name: app-storage
+          mountPath: /src/data  # Mount point for persistent data
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 40
+          periodSeconds: 30
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 10
+          periodSeconds: 5
+      volumes:
+      - name: app-storage
+        persistentVolumeClaim:
+          claimName: app-storage
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-service
+  namespace: default
+spec:
+  selector:
+    app: backend
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8000
+  type: LoadBalancer
