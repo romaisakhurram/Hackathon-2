@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  todo-frontend:
+    image: todo_frontend
+    container_name: todo_frontend
+    ports:
+      - "3000:3000"
+    volumes:
+      - minikube:/app/frontend  # Mount the existing minikube volume
+    networks:
+      - todo-network
+    restart: unless-stopped
+    environment:
+      - REACT_APP_API_URL=http://localhost:8000
+
+volumes:
+  minikube:
+    external: true  # Use the existing volume
+
+networks:
+  todo-network:
+    driver: bridge

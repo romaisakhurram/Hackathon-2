@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  todo-backend:
+    image: romaisakhurram/todo_backend:latest
+    container_name: todo_backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - minikube:/app/backend  # Mount the existing minikube volume
+    networks:
+      - todo-network
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+
+volumes:
+  minikube:
+    external: true  # Use the existing volume
+
+networks:
+  todo-network:
+    driver: bridge

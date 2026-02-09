@@ -1,0 +1,56 @@
+version: '3.8'
+
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+  
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+  
+  dapr-placement:
+    image: daprio/placement:edge
+    ports:
+      - "50005:50005"
+  
+  todo-backend:
+    image: todo_backend:latest
+    container_name: todo_backend_container
+    ports:
+      - "8000:8000"
+    volumes:
+      - minikube:/app/backend
+    environment:
+      - DATABASE_URL=sqlite+aiosqlite:///./test.db
+      - BETTER_AUTH_SECRET=your-secret-key
+      - BETTER_AUTH_URL=http://localhost:8000
+    depends_on:
+      - kafka
+      - dapr-placement
+  
+  todo-frontend:
+    image: todo_frontend:latest
+    container_name: todo_frontend_container
+    ports:
+      - "3000:3000"
+    volumes:
+      - minikube:/app/frontend
+    depends_on:
+      - todo-backend
+
+volumes:
+  minikube:
+    external: true  # Use the existing volume

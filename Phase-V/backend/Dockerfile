@@ -1,32 +1,20 @@
-# Use Python 3.12 slim image as base
-FROM python:3.12-slim
+# Use an official Python runtime as the base image
+FROM python:3.11-slim
 
-# Set environment variables
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV PYTHONUNBUFFERED=1
+# Set the working directory in the container
+WORKDIR /app
 
-# Set working directory
-WORKDIR /src
-
-# Install system dependencies needed for asyncpg and psycopg2
-RUN apt-get update && apt-get install -y \
-    gcc \
-    g++ \
-    libpq-dev \
-    && rm -rf /var/lib/apt/lists/*
-
-# Copy requirements file
+# Copy the requirements file first to leverage Docker caching
 COPY requirements.txt .
 
-# Install dependencies
-RUN pip install --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt
+# Install the dependencies
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the application code
-COPY src/ .
+# Copy the rest of the application code
+COPY . .
 
-# Expose port 8000
+# Expose the port that the app runs on
 EXPOSE 8000
 
-# Run the application
-CMD ["uvicorn", "src.main:app", "--host", "127.0.0.1", "--port", "8000"]
+# Define the command to run the application
+CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000"]

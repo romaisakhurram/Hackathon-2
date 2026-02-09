@@ -1,57 +1,89 @@
-# Kubernetes Deployment for Todo Chatbot
+# Todo Application with Dapr and Kafka
 
-This directory contains all the necessary files to deploy the Todo Chatbot application on a Kubernetes cluster using Helm charts.
+This project implements a complete Todo application with Dapr and Kafka integration for event-driven architecture.
 
-## Structure
+## Architecture Overview
 
-```
-k8s/
-├── helm-charts/           # Helm chart templates
-│   └── todo-chatbot/     # Main Helm chart
-│       ├── templates/    # Kubernetes resource templates
-│       ├── Chart.yaml    # Chart metadata
-│       └── values.yaml   # Default configuration values
-├── manifests/            # Standalone Kubernetes manifests
-└── scripts/              # Helper scripts
-    ├── deploy.sh         # Deployment script
-    └── health-check.sh   # Health check script
-```
+- **Backend**: FastAPI application with Dapr sidecar for pub/sub messaging
+- **Frontend**: Next.js application consuming the backend API
+- **Event Streaming**: Apache Kafka for task events, reminders, and updates
+- **Service Mesh**: Dapr for service-to-service communication and state management
+
+## Components
+
+### Dapr Integration
+- Sidecar injection for both frontend and backend services
+- Pub/Sub component using Kafka as the message broker
+- State management component for persistent storage
+
+### Kafka Topics
+- `task-events`: Events related to task creation, updates, and deletion
+- `reminders`: Events for reminder notifications
+- `task-updates`: Events for task status changes and recurring tasks
+
+### Kubernetes Resources
+- Namespaced deployments for all services
+- Services for internal communication
+- ConfigMaps and Secrets for configuration management
 
 ## Deployment
 
-To deploy the application to a Kubernetes cluster:
+### Local Deployment (Minikube)
 
-1. Ensure you have Helm and kubectl installed
-2. Make sure your kubectl is configured to connect to your target cluster
-3. Run the deployment script:
+1. Start Minikube with sufficient resources:
+   ```bash
+   minikube start --driver=docker --memory=4096mb --cpus=4
+   ```
 
+2. Initialize Dapr:
+   ```bash
+   dapr init -k
+   ```
+
+3. Deploy the application using Helm:
+   ```bash
+   helm install todo-app ./k8s/helm-charts/todo --namespace todo-app --create-namespace
+   ```
+
+### Deployment Script
+
+Use the provided deployment script to automate the entire process:
 ```bash
-./k8s/scripts/deploy.sh
+chmod +x k8s/scripts/deploy-dapr-kafka.sh
+./k8s/scripts/deploy-dapr-kafka.sh
 ```
 
-## Helm Chart Features
+## Testing
 
-- Configurable replica counts for frontend (default: 2) and backend (default: 1)
-- Service definitions for both frontend and backend
-- Ingress configuration for external access
-- Secret management for sensitive configuration
-- ConfigMap for non-sensitive configuration
-- Resource limits and requests for both services
-- Health checks (liveness and readiness probes)
-
-## Verification
-
-After deployment, verify the installation with:
-
+After deployment, test the functionality:
 ```bash
-./k8s/scripts/health-check.sh
+chmod +x k8s/scripts/test-features.sh
+./k8s/scripts/test-features.sh
 ```
 
-## Cleanup
+This will verify:
+- Reminders functionality
+- Recurring tasks
+- Kafka event streaming
 
-To remove the deployment:
+## Monitoring
 
+Monitor the system with:
 ```bash
-helm uninstall todo-chatbot -n todo-chatbot
-kubectl delete namespace todo-chatbot
+# Check all pods
+kubectl get pods -n todo-app
+
+# Check Kafka topics
+kubectl get kafkatopics -n kafka
+
+# Monitor Dapr sidecars
+kubectl get pods -l app=todo-backend -n todo-app -o yaml | grep dapr
 ```
+
+## Troubleshooting
+
+If you encounter issues:
+1. Check pod statuses: `kubectl get pods -A`
+2. Check logs: `kubectl logs <pod-name> -n <namespace>`
+3. Verify Dapr placement service: `kubectl get pods -l app=placement -n dapr-system`
+4. Check Kafka cluster status: `kubectl get kafka -n kafka`
