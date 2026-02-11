@@ -44,6 +44,8 @@ origins = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
     "https://hackathon-2-ruby-nine.vercel.app/",
+    "https://romaisakhurram-phase5-deploy.hf.space",
+
 ]
 
 app.add_middleware(

@@ -3,7 +3,7 @@ import { getSession } from './auth-client'; // Use the existing session getter
 
 class ApiClient {
   // ✅ FIXED: Ensure environment variable is used properly
-  private baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://127.0.0.1:8000';
+  private baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://romaisakhurram-phase5-deploy.hf.space';
 
   request = async (endpoint: string, options: RequestInit = {}) => {
     // Normalize endpoint (ensure it starts with /)
