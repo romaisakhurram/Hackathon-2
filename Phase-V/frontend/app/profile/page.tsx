@@ -4,11 +4,24 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { getSession } from '@/lib/auth-client';
+import { apiClient } from '@/lib/api';
 import { toast } from 'sonner';
 
+interface UserProfile {
+  id: string;
+  email: string;
+  name: string | null;
+  created_at: string;
+  is_active: boolean;
+  consent_granted_at: string | null;
+  consent_version: string | null;
+}
+
 export default function ProfilePage() {
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [editing, setEditing] = useState(false);
+  const [name, setName] = useState('');
   const router = useRouter();
 
   useEffect(() => {
@@ -19,9 +32,25 @@ export default function ProfilePage() {
           router.push('/signin');
           return;
         }
-        // In a real app, we would fetch user details from the API
-        // For now, we'll simulate with the session data
-        setUser(session.user);
+        // Fetch user profile from backend
+        try {
+          const userProfile = await apiClient.get('/api/user/profile');
+          setUser(userProfile);
+          setName(userProfile.name || '');
+        } catch (error) {
+          console.error('Error fetching profile:', error);
+          // Fallback to session data
+          setUser({
+            id: session.user?.id || '',
+            email: (session.user as any)?.email || '',
+            name: (session.user as any)?.name || null,
+            created_at: new Date().toISOString(),
+            is_active: true,
+            consent_granted_at: null,
+            consent_version: null
+          });
+          setName((session.user as any)?.name || '');
+        }
       } catch (error) {
         console.error('Error fetching user:', error);
         toast.error('Failed to load user profile');
@@ -33,6 +62,18 @@ export default function ProfilePage() {
 
     checkAuthAndFetchUser();
   }, [router]);
+
+  const handleSaveProfile = async () => {
+    try {
+      const updatedUser = await apiClient.put('/api/user/profile', { name });
+      setUser(updatedUser);
+      setEditing(false);
+      toast.success('Profile updated successfully!');
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      toast.error('Failed to update profile');
+    }
+  };
 
   if (loading) {
     return (
@@ -49,17 +90,22 @@ export default function ProfilePage() {
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
         <div className="px-6 py-8">
-          <div className="flex items-center space-x-4 mb-8">
-            <div className="w-20 h-20 rounded-full bg-gradient-to-r from-indigo-500 to-purple-600 flex items-center justify-center">
-              <span className="text-2xl font-bold text-white">
-                {user?.name?.charAt(0)?.toUpperCase() || user?.email?.charAt(0)?.toUpperCase() || 'U'}
-              </span>
+          <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center space-x-4">
+              <div className="w-20 h-20 rounded-full bg-gradient-to-r from-indigo-500 to-purple-600 flex items-center justify-center">
+                <span className="text-2xl font-bold text-white">
+                  {user?.name?.charAt(0)?.toUpperCase() || user?.email?.charAt(0)?.toUpperCase() || 'U'}
+                </span>
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold text-slate-900">{user?.name || 'User'}</h1>
+                <p className="text-slate-600">{user?.email}</p>
+                <p className="text-sm text-slate-500">Member since {user?.created_at ? new Date(user.created_at).toLocaleDateString() : 'today'}</p>
+              </div>
             </div>
-            <div>
-              <h1 className="text-2xl font-bold text-slate-900">{user?.name || 'User'}</h1>
-              <p className="text-slate-600">{user?.email}</p>
-              <p className="text-sm text-slate-500">Member since {user?.created_at ? new Date(user.created_at).toLocaleDateString() : 'today'}</p>
-            </div>
+            <Button variant="outline" onClick={() => setEditing(!editing)}>
+              {editing ? 'Cancel' : 'Edit Profile'}
+            </Button>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -68,7 +114,17 @@ export default function ProfilePage() {
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Full Name</label>
-                  <p className="text-slate-900">{user?.name || 'Not provided'}</p>
+                  {editing ? (
+                    <input
+                      type="text"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      placeholder="Enter your name"
+                    />
+                  ) : (
+                    <p className="text-slate-900">{user?.name || 'Not provided'}</p>
+                  )}
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Email Address</label>
@@ -102,9 +158,16 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          <div className="mt-8 flex justify-end">
-            <Button>Save Changes</Button>
-          </div>
+          {editing && (
+            <div className="mt-8 flex justify-end space-x-4">
+              <Button variant="outline" onClick={() => setEditing(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleSaveProfile}>
+                Save Changes
+              </Button>
+            </div>
+          )}
         </div>
       </div>
     </div>

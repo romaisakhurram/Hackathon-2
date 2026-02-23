@@ -4,15 +4,34 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { getSession } from '@/lib/auth-client';
+import { apiClient } from '@/lib/api';
 import { toast } from 'sonner';
+
+interface UserSettings {
+  notifications: {
+    email: boolean;
+    push: boolean;
+    sms: boolean;
+    in_app: boolean;
+  };
+  theme: string;
+  language: string;
+  timezone: string;
+}
 
 export default function SettingsPage() {
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [notifications, setNotifications] = useState({
-    email: true,
-    push: true,
-    sms: false,
+  const [settings, setSettings] = useState<UserSettings>({
+    notifications: {
+      email: true,
+      push: true,
+      sms: false,
+      in_app: true,
+    },
+    theme: 'system',
+    language: 'en',
+    timezone: 'UTC',
   });
   const router = useRouter();
 
@@ -25,6 +44,15 @@ export default function SettingsPage() {
           return;
         }
         setUser(session.user);
+        
+        // Fetch user settings from backend
+        try {
+          const userSettings = await apiClient.get('/api/user/settings');
+          setSettings(userSettings);
+        } catch (error) {
+          console.error('Error fetching settings:', error);
+          // Use default settings if fetch fails
+        }
       } catch (error) {
         console.error('Error fetching user:', error);
         toast.error('Failed to load settings');
@@ -38,14 +66,50 @@ export default function SettingsPage() {
   }, [router]);
 
   const handleNotificationChange = (type: string) => {
-    setNotifications(prev => ({
+    setSettings(prev => ({
       ...prev,
-      [type]: !prev[type as keyof typeof prev]
+      notifications: {
+        ...prev.notifications,
+        [type]: !prev.notifications[type as keyof typeof prev.notifications]
+      }
     }));
   };
 
-  const handleSaveSettings = () => {
-    toast.success('Settings saved successfully!');
+  const handleSaveSettings = async () => {
+    try {
+      await apiClient.put('/api/user/settings', settings);
+      toast.success('Settings saved successfully!');
+    } catch (error) {
+      console.error('Error saving settings:', error);
+      toast.error('Failed to save settings');
+    }
+  };
+
+  const handleExportData = async () => {
+    try {
+      const result = await apiClient.post('/api/user/export-data', {});
+      toast.success(result.message || 'Data export initiated! You will receive an email when ready.');
+    } catch (error) {
+      console.error('Error exporting data:', error);
+      toast.error('Failed to export data');
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    if (!confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
+      return;
+    }
+    
+    try {
+      await apiClient.delete('/api/user/account');
+      toast.success('Account deletion requested. You will receive a confirmation email.');
+      // Clear local storage and redirect
+      localStorage.removeItem('auth_token');
+      router.push('/signin');
+    } catch (error) {
+      console.error('Error deleting account:', error);
+      toast.error('Failed to delete account');
+    }
   };
 
   if (loading) {
@@ -78,12 +142,12 @@ export default function SettingsPage() {
                   <button
                     onClick={() => handleNotificationChange('email')}
                     className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
-                      notifications.email ? 'bg-indigo-600' : 'bg-slate-200'
+                      settings.notifications.email ? 'bg-indigo-600' : 'bg-slate-200'
                     }`}
                   >
                     <span
                       className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                        notifications.email ? 'translate-x-6' : 'translate-x-1'
+                        settings.notifications.email ? 'translate-x-6' : 'translate-x-1'
                       }`}
                     />
                   </button>
@@ -96,12 +160,12 @@ export default function SettingsPage() {
                   <button
                     onClick={() => handleNotificationChange('push')}
                     className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
-                      notifications.push ? 'bg-indigo-600' : 'bg-slate-200'
+                      settings.notifications.push ? 'bg-indigo-600' : 'bg-slate-200'
                     }`}
                   >
                     <span
                       className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                        notifications.push ? 'translate-x-6' : 'translate-x-1'
+                        settings.notifications.push ? 'translate-x-6' : 'translate-x-1'
                       }`}
                     />
                   </button>
@@ -114,12 +178,12 @@ export default function SettingsPage() {
                   <button
                     onClick={() => handleNotificationChange('sms')}
                     className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
-                      notifications.sms ? 'bg-indigo-600' : 'bg-slate-200'
+                      settings.notifications.sms ? 'bg-indigo-600' : 'bg-slate-200'
                     }`}
                   >
                     <span
                       className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                        notifications.sms ? 'translate-x-6' : 'translate-x-1'
+                        settings.notifications.sms ? 'translate-x-6' : 'translate-x-1'
                       }`}
                     />
                   </button>
@@ -140,7 +204,8 @@ export default function SettingsPage() {
                         name="theme"
                         type="radio"
                         className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-slate-300"
-                        defaultChecked
+                        checked={settings.theme === 'system'}
+                        onChange={() => setSettings({...settings, theme: 'system'})}
                       />
                       <label htmlFor="system-theme" className="ml-2 block text-sm text-slate-900">
                         System
@@ -152,6 +217,8 @@ export default function SettingsPage() {
                         name="theme"
                         type="radio"
                         className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-slate-300"
+                        checked={settings.theme === 'light'}
+                        onChange={() => setSettings({...settings, theme: 'light'})}
                       />
                       <label htmlFor="light-theme" className="ml-2 block text-sm text-slate-900">
                         Light
@@ -163,6 +230,8 @@ export default function SettingsPage() {
                         name="theme"
                         type="radio"
                         className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-slate-300"
+                        checked={settings.theme === 'dark'}
+                        onChange={() => setSettings({...settings, theme: 'dark'})}
                       />
                       <label htmlFor="dark-theme" className="ml-2 block text-sm text-slate-900">
                         Dark
@@ -180,12 +249,12 @@ export default function SettingsPage() {
                 <div>
                   <h3 className="text-sm font-medium text-slate-900 mb-1">Export Data</h3>
                   <p className="text-sm text-slate-500 mb-3">Download a copy of your data</p>
-                  <Button variant="outline">Export Data</Button>
+                  <Button variant="outline" onClick={handleExportData}>Export Data</Button>
                 </div>
                 <div>
                   <h3 className="text-sm font-medium text-slate-900 mb-1">Delete Account</h3>
                   <p className="text-sm text-slate-500 mb-3">Permanently delete your account and all data</p>
-                  <Button variant="destructive">Delete Account</Button>
+                  <Button variant="destructive" onClick={handleDeleteAccount}>Delete Account</Button>
                 </div>
               </div>
             </div>

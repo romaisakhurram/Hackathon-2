@@ -8,7 +8,7 @@ from typing import AsyncGenerator
 import logging
 import time
 from datetime import datetime
-from .routers import tasks, auth, tags, reminders, recurrence_rules
+from .routers import tasks, auth, tags, reminders, recurrence_rules, users
 
 # Import all models to register them with SQLModel.metadata before create_all
 from .models import User, Task, Conversation, Message, Priority, Tag, TaskTagLink, Reminder, RecurrenceRule
@@ -169,6 +169,8 @@ app.include_router(auth.router, prefix="/api")
 app.include_router(tags.router, prefix="/api")
 app.include_router(reminders.router, prefix="/api")
 app.include_router(recurrence_rules.router, prefix="/api")
+app.include_router(users.router, prefix="/api")
+logger.info("User router successfully loaded and included")
 
 # Include the new chat endpoint
 try:
