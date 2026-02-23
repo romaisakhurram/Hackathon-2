@@ -55,11 +55,31 @@ export default function HomePage() {
           <span className="text-lg sm:text-xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">TaskFlow</span>
         </div>
         <div className="flex items-center space-x-2 sm:space-x-3">
-          <Button variant="ghost" size="sm" asChild className="hidden sm:flex text-slate-600 hover:text-indigo-600">
-            <Link href="/chat">Chat</Link>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            asChild 
+            className="hidden sm:flex text-slate-700 hover:text-indigo-600 hover:bg-indigo-50 font-semibold transition-all duration-200"
+          >
+            <Link href="/chat" className="flex items-center">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+              </svg>
+              Chat
+            </Link>
           </Button>
-          <Button variant="ghost" size="sm" asChild className="text-slate-600 hover:text-indigo-600 font-medium">
-            <Link href="/signin">Sign In</Link>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            asChild 
+            className="text-slate-700 hover:text-indigo-600 hover:bg-indigo-50 font-semibold transition-all duration-200 border border-slate-200 hover:border-indigo-200"
+          >
+            <Link href="/signin" className="flex items-center">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+              </svg>
+              Sign In
+            </Link>
           </Button>
           <Button 
             size="sm" 
