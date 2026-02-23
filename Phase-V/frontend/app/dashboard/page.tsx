@@ -30,9 +30,6 @@ export default function DashboardPage() {
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const router = useRouter();
 
-  const [showMobileMenu, setShowMobileMenu] = useState(false);
-  const [showChat, setShowChat] = useState(false);
-
   // Check if user is authenticated and maintain session
   useEffect(() => {
     let isMounted = true; // Track if component is still mounted
@@ -417,73 +414,46 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
-      {/* Desktop Header */}
-      <header className="hidden md:block bg-white/90 backdrop-blur-lg shadow-lg border-b border-slate-200 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="flex justify-between h-16 items-center">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 flex items-center justify-center shadow-lg">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 overflow-x-hidden">
+      {/* Header */}
+      <header className="bg-white shadow-sm border-b border-slate-200 sticky top-0 z-40">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
+          <div className="flex justify-between h-14 sm:h-16 items-center">
+            <div className="flex items-center">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 flex items-center justify-center mr-2 sm:mr-3 flex-shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                 </svg>
               </div>
-              <h1 className="text-xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">TaskFlow</h1>
+              <h1 className="text-base sm:text-xl font-semibold text-slate-900 truncate">TaskFlow Dashboard</h1>
             </div>
-            <div className="flex items-center space-x-3">
-              <Button variant="ghost" size="sm" asChild>
+            <div className="flex items-center space-x-1 sm:space-x-4">
+              <div className="hidden sm:flex items-center space-x-2 text-slate-600">
+                <User className="h-4 w-4" />
+                <span className="text-sm">Welcome back!</span>
+              </div>
+              <Button variant="outline" size="sm" asChild className="hidden sm:flex">
                 <Link href="/chat">
-                  <MessageCircle className="h-5 w-5" />
+                  <MessageCircle className="h-4 w-4 mr-2" />
+                  Chat
                 </Link>
               </Button>
-              <Button variant="ghost" size="sm" asChild>
-                <Link href="/profile">
-                  <User className="h-5 w-5" />
+              <Button variant="outline" size="sm" asChild className="px-2 sm:px-4">
+                <Link href="/chat">
+                  <span className="sm:hidden">
+                    <MessageCircle className="h-4 w-4" />
+                  </span>
+                  <span className="hidden sm:inline">Chat</span>
                 </Link>
               </Button>
-              <Button variant="ghost" size="sm" asChild>
-                <Link href="/settings">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              <Button variant="outline" size="sm" onClick={handleLogout} className="px-2 sm:px-4">
+                <span className="hidden sm:inline">Logout</span>
+                <span className="sm:hidden">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                   </svg>
-                </Link>
+                </span>
               </Button>
-              <Button variant="outline" size="sm" onClick={handleLogout}>
-                Logout
-              </Button>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      {/* Mobile Header - Beautiful Gradient */}
-      <header className="md:hidden bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-600 shadow-xl sticky top-0 z-50 safe-area-top">
-        <div className="px-4">
-          <div className="flex justify-between items-center h-14">
-            <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 rounded-lg bg-white/20 backdrop-blur-sm flex items-center justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                </svg>
-              </div>
-              <h1 className="text-lg font-bold text-white">TaskFlow</h1>
-            </div>
-            <div className="flex items-center space-x-2">
-              <button
-                onClick={() => setShowChat(!showChat)}
-                className="p-2 rounded-lg bg-white/10 backdrop-blur-sm active:scale-95 transition-transform"
-              >
-                <MessageCircle className="h-5 w-5 text-white" />
-              </button>
-              <button
-                onClick={handleLogout}
-                className="p-2 rounded-lg bg-white/10 backdrop-blur-sm active:scale-95 transition-transform"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                </svg>
-              </button>
             </div>
           </div>
         </div>
@@ -868,42 +838,6 @@ export default function DashboardPage() {
           </div> {/* Close flex-1 div (tasks section) */}
         </div> {/* Close flex container (row layout) */}
       </main>
-
-      {/* Mobile Bottom Navigation - Beautiful Glassmorphism */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-lg border-t border-slate-200 shadow-2xl safe-area-bottom z-50">
-        <div className="flex justify-around items-center h-16 px-2">
-          <button
-            onClick={() => router.push('/dashboard')}
-            className="flex flex-col items-center justify-center w-full h-full space-y-1 active:scale-95 transition-transform"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-            </svg>
-            <span className="text-xs font-medium text-indigo-600">Tasks</span>
-          </button>
-          
-          <button
-            onClick={() => setShowAddForm(true)}
-            className="flex flex-col items-center justify-center w-full h-full space-y-1 active:scale-95 transition-transform"
-          >
-            <div className="w-12 h-12 -mt-4 rounded-full bg-gradient-to-r from-indigo-600 to-purple-600 shadow-lg flex items-center justify-center">
-              <Plus className="h-6 w-6 text-white" />
-            </div>
-            <span className="text-xs font-medium text-slate-600">Add</span>
-          </button>
-          
-          <button
-            onClick={() => router.push('/profile')}
-            className="flex flex-col items-center justify-center w-full h-full space-y-1 active:scale-95 transition-transform"
-          >
-            <User className="h-6 w-6 text-slate-400" />
-            <span className="text-xs font-medium text-slate-400">Profile</span>
-          </button>
-        </div>
-      </nav>
-
-      {/* Add some padding at bottom for mobile nav */}
-      <div className="md:hidden h-20"></div>
 
       {/* Toast Container */}
       <div className="fixed top-4 right-4 z-50"></div>
