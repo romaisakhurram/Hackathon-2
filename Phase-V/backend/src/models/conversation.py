@@ -12,6 +12,7 @@ class Conversation(SQLModel, table=True):
     """
     Conversation model representing a container for related messages between user and AI agent.
     """
+    __tablename__ = "conversations"
     __table_args__ = {'extend_existing': True}
 
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
@@ -21,4 +22,10 @@ class Conversation(SQLModel, table=True):
     title: Optional[str] = Field(default=None, max_length=255)  # Optional title for the conversation
 
     # Relationship to messages
-    messages: List["Message"] = Relationship(back_populates="conversation", sa_relationship_kwargs={"cascade": "all, delete-orphan"})
+    messages: List["Message"] = Relationship(
+        back_populates="conversation",
+        sa_relationship_kwargs={
+            "foreign_keys": "[Message.conversation_id]",
+            "cascade": "all, delete-orphan"
+        }
+    )

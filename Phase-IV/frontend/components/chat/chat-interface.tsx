@@ -152,22 +152,22 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   };
 
   return (
-    <Card className={cn('w-full h-[600px] flex flex-col', className)}>
+    <Card className={cn('w-full h-[500px] sm:h-[600px] flex flex-col', className)}>
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <MessageCircle className="h-5 w-5 text-primary" />
-            <CardTitle>Todo AI Assistant</CardTitle>
+            <MessageCircle className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+            <CardTitle className="text-base sm:text-lg">Todo AI Assistant</CardTitle>
           </div>
 
           {currentConversationId && (
-            <Badge variant="secondary" className="text-xs">
+            <Badge variant="secondary" className="text-xs hidden sm:inline-flex">
               Conv: {currentConversationId.substring(0, 8)}...
             </Badge>
           )}
         </div>
 
-        <p className="text-sm text-muted-foreground">
+        <p className="text-xs sm:text-sm text-muted-foreground">
           Natural language task management with AI assistance
         </p>
       </CardHeader>

@@ -14,7 +14,6 @@ class TaskBase(BaseModel):
     difficulty_level: str = "intermediate"  # beginner, intermediate, advanced
     status: str = "pending"  # pending, in-progress, completed, cancelled
     due_date: Optional[datetime] = None  # When the task is due
-    priority_id: Optional[uuid.UUID] = None  # Link to priority model
     parent_id: Optional[uuid.UUID] = None  # For recurring tasks
     recurrence_rule_id: Optional[uuid.UUID] = None  # Link to recurrence rules
     is_template: bool = False  # Whether this is a template for recurring tasks
@@ -37,7 +36,6 @@ class TaskUpdate(BaseModel):
     difficulty_level: Optional[str] = None  # beginner, intermediate, advanced
     status: Optional[str] = None
     due_date: Optional[datetime] = None
-    priority_id: Optional[uuid.UUID] = None
     parent_id: Optional[uuid.UUID] = None
     recurrence_rule_id: Optional[uuid.UUID] = None
     is_template: Optional[bool] = None

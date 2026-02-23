@@ -19,6 +19,8 @@ from src.models.priority import Priority
 from src.models.tag import Tag, TaskTagLink
 from src.models.reminder import Reminder
 from src.models.recurrence_rule import RecurrenceRule
+from src.models.message import Message
+from src.models.conversation import Conversation
 from src.config import settings
 
 
@@ -33,6 +35,27 @@ async def create_tables():
     # Convert to asyncpg format if it's postgresql
     if database_url.startswith("postgresql://"):
         database_url = database_url.replace("postgresql://", "postgresql+asyncpg://", 1)
+        
+        # Remove sslmode and channel_binding parameters as asyncpg doesn't accept them
+        parsed_url = urllib.parse.urlparse(database_url)
+        query_params = urllib.parse.parse_qs(parsed_url.query)
+        
+        # Remove unsupported parameters
+        if 'sslmode' in query_params:
+            del query_params['sslmode']
+        if 'channel_binding' in query_params:
+            del query_params['channel_binding']
+        
+        # Reconstruct URL without these parameters
+        new_query = urllib.parse.urlencode(query_params, doseq=True)
+        database_url = urllib.parse.urlunparse((
+            parsed_url.scheme,
+            parsed_url.netloc,
+            parsed_url.path,
+            parsed_url.params,
+            new_query,
+            parsed_url.fragment
+        ))
 
     print(f"Using cleaned URL: {database_url[:50]}...")  # Show first 50 chars
 
@@ -44,6 +67,7 @@ async def create_tables():
         max_overflow=10,
         pool_pre_ping=True,
         pool_recycle=300,
+        connect_args={"ssl": True},  # Enable SSL for PostgreSQL via asyncpg
     )
 
     print("Creating tables...")

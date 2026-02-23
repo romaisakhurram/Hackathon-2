@@ -152,22 +152,22 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   };
 
   return (
-    <Card className={cn('w-full h-[600px] flex flex-col', className)}>
+    <Card className={cn('w-full h-[500px] sm:h-[600px] flex flex-col', className)}>
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <MessageCircle className="h-5 w-5 text-primary" />
-            <CardTitle>Todo AI Assistant</CardTitle>
+            <MessageCircle className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+            <CardTitle className="text-base sm:text-lg">Todo AI Assistant</CardTitle>
           </div>
 
           {currentConversationId && (
-            <Badge variant="secondary" className="text-xs">
+            <Badge variant="secondary" className="text-xs hidden sm:inline-flex">
               Conv: {currentConversationId.substring(0, 8)}...
             </Badge>
           )}
         </div>
 
-        <p className="text-sm text-muted-foreground">
+        <p className="text-xs sm:text-sm text-muted-foreground">
           Natural language task management with AI assistance
         </p>
       </CardHeader>
@@ -192,45 +192,45 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                     I can help you manage your tasks using natural language. Try asking me to add, list, update, or complete tasks.
                   </p>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-6 w-full max-w-lg">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 mt-6 w-full max-w-lg">
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => setInputValue("Add a task to buy groceries")}
-                      className="justify-start"
+                      className="justify-start text-xs sm:text-sm"
                     >
-                      <Sparkles className="h-4 w-4 mr-2" />
-                      Add a task to buy groceries
+                      <Sparkles className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 flex-shrink-0" />
+                      <span className="truncate">Add a task to buy groceries</span>
                     </Button>
 
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => setInputValue("Show me my tasks")}
-                      className="justify-start"
+                      className="justify-start text-xs sm:text-sm"
                     >
-                      <Sparkles className="h-4 w-4 mr-2" />
-                      Show me my tasks
+                      <Sparkles className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 flex-shrink-0" />
+                      <span className="truncate">Show me my tasks</span>
                     </Button>
 
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => setInputValue("Complete task #1")}
-                      className="justify-start"
+                      className="justify-start text-xs sm:text-sm"
                     >
-                      <Sparkles className="h-4 w-4 mr-2" />
-                      Complete task #1
+                      <Sparkles className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 flex-shrink-0" />
+                      <span className="truncate">Complete task #1</span>
                     </Button>
 
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => setInputValue("Update task #2 priority to high")}
-                      className="justify-start"
+                      className="justify-start text-xs sm:text-sm"
                     >
-                      <Sparkles className="h-4 w-4 mr-2" />
-                      Update task priority
+                      <Sparkles className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 flex-shrink-0" />
+                      <span className="truncate">Update task priority</span>
                     </Button>
                   </div>
                 </div>
@@ -249,16 +249,16 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                     </Avatar>
                   )}
 
-                  <div className={`max-w-[80%] ${message.role === 'user' ? 'order-2' : 'order-1'}`}>
+                  <div className={`max-w-[85%] sm:max-w-[80%] ${message.role === 'user' ? 'order-2' : 'order-1'}`}>
                     <div
                       className={cn(
-                        'p-4 rounded-lg',
+                        'p-3 sm:p-4 rounded-lg',
                         message.role === 'user'
                           ? 'bg-primary text-primary-foreground rounded-br-none'
                           : 'bg-muted rounded-bl-none'
                       )}
                     >
-                      <p className="whitespace-pre-wrap">{message.content}</p>
+                      <p className="whitespace-pre-wrap text-sm sm:text-base">{message.content}</p>
 
                       {message.tool_calls && message.tool_calls.length > 0 && (
                         <div className="mt-3 pt-3 border-t border-t-muted-foreground/20">
@@ -318,15 +318,15 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
       <Separator />
 
-      <CardFooter className="p-4 pt-0">
+      <CardFooter className="p-3 sm:p-4 pt-0">
         <form onSubmit={handleSubmit} className="flex w-full gap-2">
           <textarea
             ref={inputRef}
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Ask me to manage your tasks (e.g., 'Add a task to buy groceries')..."
-            className="flex-1 min-h-[60px] max-h-32 resize-none border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 rounded-md"
+            placeholder="Ask me to manage your tasks..."
+            className="flex-1 min-h-[50px] sm:min-h-[60px] max-h-32 resize-none border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 rounded-md"
             disabled={isLoading}
             rows={1}
           />
@@ -334,10 +334,10 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
           <Button
             type="submit"
             disabled={isLoading || !inputValue.trim()}
-            className="h-[60px] flex-shrink-0"
+            className="h-[50px] sm:h-[60px] flex-shrink-0 px-2 sm:px-4"
           >
             <SendHorizontal className="h-4 w-4" />
-            <span className="sr-only">Send message</span>
+            <span className="sr-only">Send</span>
           </Button>
         </form>
       </CardFooter>

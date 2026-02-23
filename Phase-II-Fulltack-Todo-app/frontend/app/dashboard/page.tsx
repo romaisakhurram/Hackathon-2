@@ -289,48 +289,53 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 overflow-x-hidden">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b border-slate-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16 items-center">
+      <header className="bg-white shadow-sm border-b border-slate-200 sticky top-0 z-40">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
+          <div className="flex justify-between h-14 sm:h-16 items-center">
             <div className="flex items-center">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 flex items-center justify-center mr-3">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 flex items-center justify-center mr-2 sm:mr-3 flex-shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                 </svg>
               </div>
-              <h1 className="text-xl font-semibold text-slate-900">TaskFlow Dashboard</h1>
+              <h1 className="text-base sm:text-xl font-semibold text-slate-900 truncate">TaskFlow Dashboard</h1>
             </div>
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2 text-slate-600">
+            <div className="flex items-center space-x-2 sm:space-x-4">
+              <div className="hidden sm:flex items-center space-x-2 text-slate-600">
                 <User className="h-4 w-4" />
                 <span className="text-sm">Welcome back!</span>
               </div>
-              <Button variant="outline" size="sm" onClick={handleLogout}>
-                Logout
+              <Button variant="outline" size="sm" onClick={handleLogout} className="px-2 sm:px-4">
+                <span className="hidden sm:inline">Logout</span>
+                <span className="sm:hidden">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                  </svg>
+                </span>
               </Button>
             </div>
           </div>
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8">
-          <div>
-            <h2 className="text-2xl font-bold text-slate-900">Your Tasks</h2>
-            <p className="text-slate-600 mt-1">Manage your personal todo items efficiently</p>
+      <main className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-8">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 sm:mb-8 gap-3">
+          <div className="w-full sm:w-auto">
+            <h2 className="text-xl sm:text-2xl font-bold text-slate-900">Your Tasks</h2>
+            <p className="text-sm sm:text-base text-slate-600 mt-1">Manage your personal todo items efficiently</p>
           </div>
-          <Button className="mt-4 sm:mt-0 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white" onClick={() => setShowAddForm(!showAddForm)}>
-            <Plus className="h-4 w-4 mr-2" />
+          <Button className="w-full sm:w-auto mt-2 sm:mt-0 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white text-sm sm:text-base" onClick={() => setShowAddForm(!showAddForm)}>
+            <Plus className="h-4 w-4 mr-1 sm:mr-2" />
             Add Task
           </Button>
         </div>
 
         {/* Add Task Form */}
         {showAddForm && (
-          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-8">
-            <h3 className="text-lg font-medium text-slate-900 mb-4">Create New Task</h3>
+          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 sm:p-6 mb-6 sm:mb-8">
+            <h3 className="text-base sm:text-lg font-medium text-slate-900 mb-4">Create New Task</h3>
             <form onSubmit={handleAddTask} className="space-y-4">
               <div>
                 <label htmlFor="title" className="block text-sm font-medium text-slate-700 mb-1">
@@ -341,7 +346,7 @@ export default function DashboardPage() {
                   id="title"
                   value={newTaskTitle}
                   onChange={(e) => setNewTaskTitle(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm sm:text-base"
                   placeholder="What needs to be done?"
                   required
                 />
@@ -354,7 +359,7 @@ export default function DashboardPage() {
                   id="description"
                   value={newTaskDescription}
                   onChange={(e) => setNewTaskDescription(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm sm:text-base"
                   placeholder="Add details..."
                   rows={3}
                 />
@@ -367,16 +372,16 @@ export default function DashboardPage() {
                   id="priority"
                   value={newTaskPriority}
                   onChange={(e) => setNewTaskPriority(e.target.value as 'low' | 'medium' | 'high')}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm sm:text-base"
                 >
                   <option value="low">Low</option>
                   <option value="medium">Medium</option>
                   <option value="high">High</option>
                 </select>
               </div>
-              <div className="flex space-x-3 pt-2">
-                <Button type="submit">Add Task</Button>
-                <Button type="button" variant="outline" onClick={() => setShowAddForm(false)}>
+              <div className="flex flex-col sm:flex-row gap-2 pt-2">
+                <Button type="submit" className="w-full sm:w-auto">Add Task</Button>
+                <Button type="button" variant="outline" onClick={() => setShowAddForm(false)} className="w-full sm:w-auto">
                   Cancel
                 </Button>
               </div>
@@ -386,16 +391,16 @@ export default function DashboardPage() {
 
         {/* Task List */}
         {tasks.length === 0 ? (
-          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-12 text-center">
-            <div className="mx-auto h-24 w-24 rounded-full bg-slate-100 flex items-center justify-center mb-6">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-8 sm:p-12 text-center">
+            <div className="mx-auto h-16 w-16 sm:h-24 sm:w-24 rounded-full bg-slate-100 flex items-center justify-center mb-4 sm:mb-6">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 sm:h-12 sm:w-12 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
               </svg>
             </div>
-            <h3 className="text-lg font-medium text-slate-900 mb-1">No tasks yet</h3>
-            <p className="text-slate-500 mb-6">Get started by creating your first task</p>
-            <Button onClick={() => setShowAddForm(true)} className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white">
-              <Plus className="h-4 w-4 mr-2" />
+            <h3 className="text-base sm:text-lg font-medium text-slate-900 mb-1">No tasks yet</h3>
+            <p className="text-sm sm:text-base text-slate-500 mb-4 sm:mb-6">Get started by creating your first task</p>
+            <Button onClick={() => setShowAddForm(true)} className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white w-full sm:w-auto">
+              <Plus className="h-4 w-4 mr-1 sm:mr-2" />
               Create your first task
             </Button>
           </div>
@@ -405,8 +410,8 @@ export default function DashboardPage() {
               {tasks.map((task) => (
                 editingTask && editingTask.id === task.id ? (
                   // Edit form for the task
-                  <div key={task.id} className="p-6 bg-slate-50 border border-slate-200 rounded-lg m-4">
-                    <div className="space-y-4">
+                  <div key={task.id} className="p-4 sm:p-6 bg-slate-50 border border-slate-200 rounded-lg m-2 sm:m-4">
+                    <div className="space-y-3 sm:space-y-4">
                       <div>
                         <label htmlFor={`edit-title-${task.id}`} className="block text-sm font-medium text-slate-700 mb-1">
                           Task Title
@@ -416,7 +421,7 @@ export default function DashboardPage() {
                           type="text"
                           value={editingTask.title}
                           onChange={(e) => setEditingTask({...editingTask, title: e.target.value})}
-                          className="w-full px-3 py-2 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                          className="w-full px-3 py-2 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm sm:text-base"
                           placeholder="What needs to be done?"
                         />
                       </div>
@@ -428,7 +433,7 @@ export default function DashboardPage() {
                           id={`edit-description-${task.id}`}
                           value={editingTask.description}
                           onChange={(e) => setEditingTask({...editingTask, description: e.target.value})}
-                          className="w-full px-3 py-2 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                          className="w-full px-3 py-2 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm sm:text-base"
                           placeholder="Add details..."
                           rows={2}
                         />
@@ -441,16 +446,16 @@ export default function DashboardPage() {
                           id={`edit-priority-${task.id}`}
                           value={editingTask.priority}
                           onChange={(e) => setEditingTask({...editingTask, priority: e.target.value as 'low' | 'medium' | 'high'})}
-                          className="w-full px-3 py-2 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                          className="w-full px-3 py-2 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm sm:text-base"
                         >
                           <option value="low">Low</option>
                           <option value="medium">Medium</option>
                           <option value="high">High</option>
                         </select>
                       </div>
-                      <div className="flex space-x-3 pt-2">
-                        <Button onClick={handleUpdateTask}>Save Changes</Button>
-                        <Button type="button" variant="outline" onClick={handleCancelEdit}>
+                      <div className="flex flex-col sm:flex-row gap-2 pt-2">
+                        <Button onClick={handleUpdateTask} className="w-full sm:w-auto">Save Changes</Button>
+                        <Button type="button" variant="outline" onClick={handleCancelEdit} className="w-full sm:w-auto">
                           Cancel
                         </Button>
                       </div>
@@ -458,9 +463,9 @@ export default function DashboardPage() {
                   </div>
                 ) : (
                   // Display task normally
-                  <div key={task.id} className="p-6 hover:bg-slate-50 transition-colors">
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-start space-x-3">
+                  <div key={task.id} className="p-3 sm:p-6 hover:bg-slate-50 transition-colors">
+                    <div className="flex items-start justify-between gap-2 sm:gap-4">
+                      <div className="flex items-start space-x-2 sm:space-x-3 min-w-0 flex-1">
                         <button
                           onClick={() => handleToggleComplete(task.id, task.status)}
                           className={`flex-shrink-0 w-5 h-5 rounded border mt-0.5 flex items-center justify-center ${
@@ -470,10 +475,10 @@ export default function DashboardPage() {
                           }`}
                           aria-label={task.status === 'completed' ? 'Mark as incomplete' : 'Mark as complete'}
                         >
-                          {task.status === 'completed' && <Check className="h-4 w-4" />}
+                          {task.status === 'completed' && <Check className="h-3 w-3 sm:h-4 sm:w-4" />}
                         </button>
                         <div className="min-w-0 flex-1">
-                          <h3 className={`text-sm font-medium ${
+                          <h3 className={`text-sm font-medium break-words ${
                             task.status === 'completed'
                               ? 'text-slate-500 line-through'
                               : 'text-slate-900'
@@ -481,7 +486,7 @@ export default function DashboardPage() {
                             {task.title}
                           </h3>
                           {task.description && (
-                            <p className={`text-sm mt-1 ${
+                            <p className={`text-sm mt-1 break-words ${
                               task.status === 'completed'
                                 ? 'text-slate-400 line-through'
                                 : 'text-slate-500'
@@ -489,8 +494,8 @@ export default function DashboardPage() {
                               {task.description}
                             </p>
                           )}
-                          <div className="flex items-center mt-2 space-x-2">
-                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          <div className="flex flex-wrap items-center gap-1 sm:gap-2 mt-2">
+                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
                               task.priority === 'high'
                                 ? 'bg-red-100 text-red-800'
                                 : task.priority === 'medium'
@@ -499,7 +504,7 @@ export default function DashboardPage() {
                             }`}>
                               {task.priority}
                             </span>
-                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
                               task.status === 'completed'
                                 ? 'bg-green-100 text-green-800'
                                 : task.status === 'in-progress'
@@ -514,17 +519,17 @@ export default function DashboardPage() {
                           </div>
                         </div>
                       </div>
-                      <div className="flex items-center space-x-2">
+                      <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
                         <button
                           onClick={() => startEditingTask(task)}
-                          className="text-slate-400 hover:text-indigo-500 transition-colors p-1 rounded hover:bg-slate-100"
+                          className="text-slate-400 hover:text-indigo-500 transition-colors p-1.5 rounded hover:bg-slate-100"
                           aria-label="Edit task"
                         >
                           <Edit className="h-4 w-4" />
                         </button>
                         <button
                           onClick={() => handleDeleteTask(task.id)}
-                          className="text-slate-400 hover:text-red-500 transition-colors p-1 rounded hover:bg-red-50"
+                          className="text-slate-400 hover:text-red-500 transition-colors p-1.5 rounded hover:bg-red-50"
                           aria-label="Delete task"
                         >
                           <X className="h-4 w-4" />
@@ -539,8 +544,8 @@ export default function DashboardPage() {
         )}
       </main>
 
-      {/* Toast Container */}
-      <div className="fixed top-4 right-4 z-50"></div>
+      {/* Toast Container - positioned for mobile and desktop */}
+      <div className="fixed top-2 right-2 sm:top-4 sm:right-4 z-50 w-[calc(100%-1rem)] sm:w-auto max-w-sm"></div>
     </div>
   );
 }

@@ -37,7 +37,13 @@ class RecurrenceRule(RecurrenceRuleBase, table=True):
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
     # Relationship to task (one-to-one with tasks)
-    task: "Task" = Relationship(back_populates="recurrence_rule")
+    task: "Task" = Relationship(
+        back_populates="recurrence_rule",
+        sa_relationship_kwargs={
+            "foreign_keys": "[Task.recurrence_rule_id]",
+            "uselist": False
+        }
+    )
 
 
 class RecurrenceRuleCreate(RecurrenceRuleBase):

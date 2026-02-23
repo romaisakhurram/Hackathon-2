@@ -16,6 +16,10 @@
   }
 }
 
+* {
+  box-sizing: border-box;
+}
+
 body {
   color: rgb(var(--foreground-rgb));
   background: linear-gradient(
@@ -24,4 +28,35 @@ body {
       rgb(var(--background-end-rgb))
     )
     rgb(var(--background-start-rgb));
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
+
+/* Responsive utilities */
+@layer utilities {
+  .container-custom {
+    @apply w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+  
+  .text-responsive {
+    @apply text-sm sm:text-base md:text-lg;
+  }
+  
+  .btn-responsive {
+    @apply w-full sm:w-auto;
+  }
+}
+
+/* Mobile-first responsive improvements */
+@media (max-width: 640px) {
+  .hide-mobile {
+    display: none;
+  }
+}
+
+/* Ensure images and content don't overflow */
+img, video, canvas {
+  max-width: 100%;
+  height: auto;
 }

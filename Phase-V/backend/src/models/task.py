@@ -11,6 +11,7 @@ if TYPE_CHECKING:
     from .reminder import Reminder
     from .recurrence_rule import RecurrenceRule
     from .tag import Tag
+    from .priority import Priority
 
 
 class Task(SQLModel, table=True):
@@ -32,16 +33,21 @@ class Task(SQLModel, table=True):
     updated_at: datetime = Field(default_factory=datetime.utcnow)
     due_date: Optional[datetime] = Field(default=None)  # When the task is due
     completed_at: Optional[datetime] = Field(default=None)  # When the task was completed
-    priority_id: Optional[uuid.UUID] = Field(default=None, foreign_key="priorities.id")  # Link to priority model
     parent_id: Optional[uuid.UUID] = Field(default=None, foreign_key="tasks.id")  # For recurring tasks
     recurrence_rule_id: Optional[uuid.UUID] = Field(default=None, foreign_key="recurrence_rules.id")  # Link to recurrence rules
     is_template: bool = Field(default=False)  # Whether this is a template for recurring tasks
-    user_id: uuid.UUID = Field(nullable=False, index=True)  # Foreign key to user, indexed for performance
+    user_id: uuid.UUID = Field(foreign_key="users.id", nullable=False, index=True)  # Foreign key to user, indexed for performance
 
     # Relationships
     user: "User" = Relationship(back_populates="tasks")
     reminders: List["Reminder"] = Relationship(back_populates="task", cascade_delete=True)
-    recurrence_rule: "RecurrenceRule" = Relationship(back_populates="task")
+    recurrence_rule: Optional["RecurrenceRule"] = Relationship(
+        back_populates="task",
+        sa_relationship_kwargs={
+            "uselist": False,
+            "foreign_keys": "[Task.recurrence_rule_id]"
+        }
+    )
     tags: List["Tag"] = Relationship(back_populates="tasks", link_model=TaskTagLink)
 
     def __repr__(self):

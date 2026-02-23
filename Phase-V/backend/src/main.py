@@ -10,6 +10,9 @@ import time
 from datetime import datetime
 from .routers import tasks, auth, tags, reminders, recurrence_rules
 
+# Import all models to register them with SQLModel.metadata before create_all
+from .models import User, Task, Conversation, Message, Priority, Tag, TaskTagLink, Reminder, RecurrenceRule
+
 # Logging setup
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -44,8 +47,6 @@ origins = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
     "https://hackathon-2-ruby-nine.vercel.app/",
-    "https://romaisakhurram-phase5-deploy.hf.space",
-
 ]
 
 app.add_middleware(

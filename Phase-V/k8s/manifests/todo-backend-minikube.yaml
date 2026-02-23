@@ -16,12 +16,28 @@ spec:
     spec:
       containers:
       - name: todo-backend
-        image: todo_backend
+        image: romaisakhurram/todo_backend:latest
+        imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 8000
         env:
         - name: PORT
           value: "8000"
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: DATABASE_URL
+        - name: BETTER_AUTH_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: BETTER_AUTH_SECRET
+        - name: BETTER_AUTH_URL
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: BETTER_AUTH_URL
 ---
 apiVersion: v1
 kind: Service

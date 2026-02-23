@@ -211,6 +211,7 @@ export default function DashboardPage() {
         description: newTaskDescription,
         priority: priorityValue,
         difficulty_level: newTaskDifficultyLevel,
+        status: 'pending',
       };
 
       // Add due date if provided
@@ -218,26 +219,8 @@ export default function DashboardPage() {
         newTaskData.due_date = newTaskDueDate;
       }
 
-      // Add tags if provided
-      if (newTaskTags) {
-        newTaskData.tags = newTaskTags.split(',').map(tag => tag.trim());
-      }
-
-      // Add recurrence rule if selected
-      if (newTaskRecurrence !== 'none') {
-        newTaskData.recurrence_rule = {
-          interval: newTaskRecurrence,
-          frequency: 1, // Default to every 1 interval
-        };
-      }
-
-      // Add reminder if selected
-      if (newTaskReminder !== 'none') {
-        newTaskData.reminders = [{
-          method: newTaskReminder,
-          scheduled_time: newTaskDueDate ? new Date(new Date(newTaskDueDate).getTime() - 24 * 60 * 60 * 1000).toISOString() : new Date().toISOString(),
-        }];
-      }
+      // Note: tags, recurrence_rule, and reminders are not supported in basic create
+      // They will be added in a future update
 
       const newTask = await apiClient.post('/api/tasks/', newTaskData);
 
@@ -431,102 +414,117 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 overflow-x-hidden">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b border-slate-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16 items-center">
+      <header className="bg-white shadow-sm border-b border-slate-200 sticky top-0 z-40">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
+          <div className="flex justify-between h-14 sm:h-16 items-center">
             <div className="flex items-center">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 flex items-center justify-center mr-3">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 flex items-center justify-center mr-2 sm:mr-3 flex-shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                 </svg>
               </div>
-              <h1 className="text-xl font-semibold text-slate-900">TaskFlow Dashboard</h1>
+              <h1 className="text-base sm:text-xl font-semibold text-slate-900 truncate">TaskFlow Dashboard</h1>
             </div>
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2 text-slate-600">
+            <div className="flex items-center space-x-1 sm:space-x-4">
+              <div className="hidden sm:flex items-center space-x-2 text-slate-600">
                 <User className="h-4 w-4" />
                 <span className="text-sm">Welcome back!</span>
               </div>
-              <Button variant="outline" size="sm" asChild>
+              <Button variant="outline" size="sm" asChild className="hidden sm:flex">
                 <Link href="/chat">
                   <MessageCircle className="h-4 w-4 mr-2" />
                   Chat
                 </Link>
               </Button>
-              <Button variant="outline" size="sm" onClick={handleLogout}>
-                Logout
+              <Button variant="outline" size="sm" asChild className="px-2 sm:px-4">
+                <Link href="/chat">
+                  <span className="sm:hidden">
+                    <MessageCircle className="h-4 w-4" />
+                  </span>
+                  <span className="hidden sm:inline">Chat</span>
+                </Link>
+              </Button>
+              <Button variant="outline" size="sm" onClick={handleLogout} className="px-2 sm:px-4">
+                <span className="hidden sm:inline">Logout</span>
+                <span className="sm:hidden">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                  </svg>
+                </span>
               </Button>
             </div>
           </div>
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex flex-col lg:flex-row gap-8">
+      <main className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-8">
+        <div className="flex flex-col lg:flex-row gap-4 sm:gap-8">
           {/* Tasks Section */}
-          <div className="flex-1">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8">
-              <div>
-                <h2 className="text-2xl font-bold text-slate-900">Your Tasks</h2>
-                <p className="text-slate-600 mt-1">Manage your personal todo items efficiently</p>
+          <div className="flex-1 min-w-0">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 sm:mb-8 gap-3">
+              <div className="w-full sm:w-auto">
+                <h2 className="text-xl sm:text-2xl font-bold text-slate-900">Your Tasks</h2>
+                <p className="text-sm sm:text-base text-slate-600 mt-1">Manage your personal todo items efficiently</p>
               </div>
-              <Button className="mt-4 sm:mt-0 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white" onClick={() => setShowAddForm(!showAddForm)}>
-                <Plus className="h-4 w-4 mr-2" />
+              <Button className="w-full sm:w-auto mt-2 sm:mt-0 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white text-sm sm:text-base" onClick={() => setShowAddForm(!showAddForm)}>
+                <Plus className="h-4 w-4 mr-1 sm:mr-2" />
                 Add Task
               </Button>
             </div>
 
             {/* Filters and Search */}
-            <div className="mb-6 flex flex-col sm:flex-row gap-4">
-              <div className="relative flex-1">
+            <div className="mb-4 sm:mb-6 flex flex-col gap-3">
+              <div className="relative w-full">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-4 w-4" />
                 <input
                   type="text"
                   placeholder="Search tasks..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                  className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm sm:text-base"
                 />
               </div>
-              <select
-                value={filterBy}
-                onChange={(e) => setFilterBy(e.target.value as any)}
-                className="px-3 py-2 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-              >
-                <option value="all">All Statuses</option>
-                <option value="pending">Pending</option>
-                <option value="in-progress">In Progress</option>
-                <option value="completed">Completed</option>
-              </select>
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as any)}
-                className="px-3 py-2 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-              >
-                <option value="created_at">Sort by Created Date</option>
-                <option value="due_date">Sort by Due Date</option>
-                <option value="priority">Sort by Priority</option>
-                <option value="title">Sort by Title</option>
-              </select>
-              <select
-                value={sortOrder}
-                onChange={(e) => setSortOrder(e.target.value as any)}
-                className="px-3 py-2 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-              >
-                <option value="desc">Descending</option>
-                <option value="asc">Ascending</option>
-              </select>
-              <Button onClick={fetchTasks} variant="outline">
-                Apply
-              </Button>
+              <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2">
+                <select
+                  value={filterBy}
+                  onChange={(e) => setFilterBy(e.target.value as any)}
+                  className="px-2 sm:px-3 py-2 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-xs sm:text-sm flex-1 min-w-[120px]"
+                >
+                  <option value="all">All Statuses</option>
+                  <option value="pending">Pending</option>
+                  <option value="in-progress">In Progress</option>
+                  <option value="completed">Completed</option>
+                </select>
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value as any)}
+                  className="px-2 sm:px-3 py-2 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-xs sm:text-sm flex-1 min-w-[140px]"
+                >
+                  <option value="created_at">Sort by Date</option>
+                  <option value="due_date">Sort by Due Date</option>
+                  <option value="priority">Sort by Priority</option>
+                  <option value="title">Sort by Title</option>
+                </select>
+                <select
+                  value={sortOrder}
+                  onChange={(e) => setSortOrder(e.target.value as any)}
+                  className="px-2 sm:px-3 py-2 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-xs sm:text-sm flex-1 min-w-[120px]"
+                >
+                  <option value="desc">Descending</option>
+                  <option value="asc">Ascending</option>
+                </select>
+                <Button onClick={fetchTasks} variant="outline" className="text-xs sm:text-sm px-3 sm:px-4">
+                  Apply
+                </Button>
+              </div>
             </div>
 
             {/* Add Task Form */}
             {showAddForm && (
-              <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-8">
-                <h3 className="text-lg font-medium text-slate-900 mb-4">Create New Task</h3>
+              <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 sm:p-6 mb-4 sm:mb-6">
+                <h3 className="text-base sm:text-lg font-medium text-slate-900 mb-4">Create New Task</h3>
                 <form onSubmit={handleAddTask} className="space-y-4">
                   <div>
                     <label htmlFor="title" className="block text-sm font-medium text-slate-700 mb-1">

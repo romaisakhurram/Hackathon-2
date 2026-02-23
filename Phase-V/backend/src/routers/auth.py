@@ -153,7 +153,7 @@ async def better_auth_sign_up(signup_data: SignUpEmailRequest):
         raise
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_ERROR,
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Sign-up failed"
         )
 
@@ -197,7 +197,7 @@ async def better_auth_sign_in(signin_data: SignInEmailRequest):
         raise
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_ERROR,
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Sign-in failed"
         )
 

@@ -89,7 +89,7 @@ def init_engines():
                 max_overflow=10,
                 pool_pre_ping=True,  # Verify connections before use
                 pool_recycle=300,  # Recycle connections every 5 minutes
-                **ssl_params  # Pass SSL parameters separately
+                connect_args=ssl_params  # Pass SSL parameters through connect_args
             )
             print(f"Async engine created: {async_engine is not None}")
 

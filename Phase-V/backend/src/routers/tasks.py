@@ -16,6 +16,10 @@ router = APIRouter(prefix="/tasks", tags=["tasks"])
 
 @router.get("/", response_model=List[TaskResponse])
 async def list_tasks(
+    sort_by: str = "created_at",
+    sort_order: str = "desc",
+    page: int = 1,
+    limit: int = 100,
     user_id: str = Depends(get_current_user_id),
     session: AsyncSession = Depends(get_async_session)
 ):
@@ -24,6 +28,7 @@ async def list_tasks(
     Implements user data isolation by filtering all queries by user_id from the authenticated user's token.
     """
     import uuid as uuid_lib
+    from sqlalchemy import desc, asc
 
     # Convert string user_id to UUID for comparison with Task.user_id
     try:
@@ -34,8 +39,25 @@ async def list_tasks(
             detail="Invalid user ID format"
         )
 
-    # Query tasks filtered by user_id to ensure data isolation (FR-002)
-    statement = select(Task).where(Task.user_id == user_uuid)
+    # Validate sort_by parameter to prevent SQL injection
+    valid_sort_columns = {
+        "created_at": Task.created_at,
+        "due_date": Task.due_date,
+        "priority": Task.priority,
+        "title": Task.title
+    }
+    order_column = valid_sort_columns.get(sort_by, Task.created_at)
+
+    # Apply sorting
+    if sort_order == "asc":
+        statement = select(Task).where(Task.user_id == user_uuid).order_by(asc(order_column))
+    else:
+        statement = select(Task).where(Task.user_id == user_uuid).order_by(desc(order_column))
+
+    # Apply pagination
+    offset = (page - 1) * limit
+    statement = statement.offset(offset).limit(limit)
+
     results = await session.execute(statement)
     tasks = results.scalars().all()
 
@@ -87,27 +109,43 @@ async def create_task(
     Assigns the current user's user_id to ensure data isolation (FR-002).
     """
     import uuid as uuid_lib
+    import logging
 
-    # Convert string user_id to UUID for Task.user_id
+    logger = logging.getLogger(__name__)
+
     try:
-        user_uuid = uuid_lib.UUID(user_id)
-    except ValueError:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid user ID format"
+        # Convert string user_id to UUID for Task.user_id
+        try:
+            user_uuid = uuid_lib.UUID(user_id)
+        except ValueError:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid user ID format"
+            )
+
+        logger.info(f"Creating task for user {user_id}: {task_data.title}")
+
+        # Create task with the authenticated user's ID
+        task = Task(
+            **task_data.model_dump(),
+            user_id=user_uuid
         )
 
-    # Create task with the authenticated user's ID
-    task = Task(
-        **task_data.model_dump(),
-        user_id=user_uuid
-    )
+        session.add(task)
+        await session.commit()
+        await session.refresh(task)
 
-    session.add(task)
-    await session.commit()
-    await session.refresh(task)
+        logger.info(f"Task created successfully: {task.id}")
+        return task
 
-    return task
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error creating task: {str(e)}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to create task: {str(e)}"
+        )
 
 
 @router.put("/{task_id}", response_model=TaskResponse)

@@ -34,7 +34,12 @@ class Reminder(ReminderBase, table=True):
     updated_at: datetime = Field(default_factory=datetime.utcnow)
     
     # Relationship to task
-    task: "Task" = Relationship(back_populates="reminders")
+    task: "Task" = Relationship(
+        back_populates="reminders",
+        sa_relationship_kwargs={
+            "foreign_keys": "[Reminder.task_id]"
+        }
+    )
 
 
 class ReminderCreate(ReminderBase):
