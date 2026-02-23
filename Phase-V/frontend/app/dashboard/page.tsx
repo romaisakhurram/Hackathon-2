@@ -414,42 +414,36 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 overflow-x-hidden">
-      {/* Header */}
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+      {/* Header - Responsive */}
       <header className="bg-white shadow-sm border-b border-slate-200 sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
+        <div className="w-full px-3 sm:px-4 md:px-6 lg:px-8">
           <div className="flex justify-between h-14 sm:h-16 items-center">
             <div className="flex items-center">
-              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 flex items-center justify-center mr-2 sm:mr-3 flex-shrink-0">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 flex items-center justify-center flex-shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 sm:h-6 sm:w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                 </svg>
               </div>
-              <h1 className="text-base sm:text-xl font-semibold text-slate-900 truncate">TaskFlow Dashboard</h1>
+              <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-slate-900 ml-2 sm:ml-3 truncate">TaskFlow</h1>
             </div>
-            <div className="flex items-center space-x-1 sm:space-x-4">
-              <div className="hidden sm:flex items-center space-x-2 text-slate-600">
-                <User className="h-4 w-4" />
-                <span className="text-sm">Welcome back!</span>
-              </div>
-              <Button variant="outline" size="sm" asChild className="hidden sm:flex">
+            <div className="flex items-center space-x-2 sm:space-x-4">
+              <Button variant="ghost" size="sm" asChild className="hidden sm:flex">
                 <Link href="/chat">
-                  <MessageCircle className="h-4 w-4 mr-2" />
-                  Chat
+                  <MessageCircle className="h-5 w-5" />
+                  <span className="ml-2">Chat</span>
                 </Link>
               </Button>
-              <Button variant="outline" size="sm" asChild className="px-2 sm:px-4">
-                <Link href="/chat">
-                  <span className="sm:hidden">
-                    <MessageCircle className="h-4 w-4" />
-                  </span>
-                  <span className="hidden sm:inline">Chat</span>
+              <Button variant="ghost" size="sm" asChild>
+                <Link href="/profile">
+                  <User className="h-5 w-5" />
+                  <span className="ml-2 hidden sm:inline">Profile</span>
                 </Link>
               </Button>
-              <Button variant="outline" size="sm" onClick={handleLogout} className="px-2 sm:px-4">
+              <Button variant="outline" size="sm" onClick={handleLogout} className="text-xs sm:text-sm">
                 <span className="hidden sm:inline">Logout</span>
                 <span className="sm:hidden">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                   </svg>
                 </span>
