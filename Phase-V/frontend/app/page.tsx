@@ -43,46 +43,74 @@ export default function HomePage() {
   }, [router]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
-      {/* Navigation */}
-      <nav className="flex items-center justify-between p-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 overflow-x-hidden">
+      {/* Navigation - Responsive */}
+      <nav className="flex items-center justify-between p-4 sm:p-6 bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-50">
         <div className="flex items-center space-x-2">
-          <div className="w-10 h-10 rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 flex items-center justify-center">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 flex items-center justify-center shadow-lg">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 sm:h-6 sm:w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
             </svg>
           </div>
-          <span className="text-xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent">TaskFlow</span>
+          <span className="text-lg sm:text-xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">TaskFlow</span>
         </div>
-        <div className="flex items-center space-x-4">
-          <Button variant="ghost" asChild>
+        <div className="flex items-center space-x-2 sm:space-x-3">
+          <Button variant="ghost" size="sm" asChild className="hidden sm:flex text-slate-600 hover:text-indigo-600">
             <Link href="/chat">Chat</Link>
           </Button>
-          <Button variant="ghost" asChild>
+          <Button variant="ghost" size="sm" asChild className="text-slate-600 hover:text-indigo-600 font-medium">
             <Link href="/signin">Sign In</Link>
           </Button>
-          <Button asChild>
-            <Link href="/signup">Get Started</Link>
+          <Button 
+            size="sm" 
+            asChild 
+            className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-semibold shadow-md hover:shadow-lg hover:scale-105 transition-all duration-200 rounded-lg"
+          >
+            <Link href="/signup" className="flex items-center">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+              <span className="hidden sm:inline">Get Started</span>
+            </Link>
           </Button>
         </div>
       </nav>
 
       {/* Hero Section */}
-      <div className="container mx-auto px-4 py-16">
+      <div className="container mx-auto px-4 sm:px-6 py-12 sm:py-16 lg:py-20">
         <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-slate-900 via-indigo-700 to-slate-900 bg-clip-text text-transparent mb-6 leading-tight">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent mb-4 sm:mb-6 leading-tight animate-gradient">
             Elevate Your <span className="text-indigo-600">Productivity</span> with Smart Task Management
           </h1>
-          <p className="text-xl text-slate-600 mb-14 max-w-2xl mx-auto">
+          <p className="text-base sm:text-lg md:text-xl text-slate-600 mb-8 sm:mb-12 max-w-2xl mx-auto px-4 leading-relaxed">
             A beautifully designed, secure todo application that helps you organize your life with elegance and simplicity.
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
-            <Button size="lg" className="px-8 py-4 text-lg bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-lg" asChild>
-              <Link href="/signup">Start Free Trial</Link>
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center mb-12 sm:mb-16 px-4">
+            <Button 
+              size="lg" 
+              className="w-full sm:w-auto px-8 py-4 text-base sm:text-lg font-semibold bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-xl hover:shadow-2xl hover:scale-105 transition-all duration-200 rounded-xl" 
+              asChild
+            >
+              <Link href="/signup" className="flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+                Start Free Trial
+              </Link>
             </Button>
-            <Button size="lg" variant="outline" className="px-8 py-4 text-lg border-2" asChild>
-              <Link href="/signin">Sign In</Link>
+            <Button 
+              size="lg" 
+              variant="outline" 
+              className="w-full sm:w-auto px-8 py-4 text-base sm:text-lg font-semibold border-2 border-indigo-600 text-indigo-600 hover:bg-indigo-600 hover:text-white shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200 rounded-xl" 
+              asChild
+            >
+              <Link href="/signin" className="flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                </svg>
+                Sign In
+              </Link>
             </Button>
           </div>
 
