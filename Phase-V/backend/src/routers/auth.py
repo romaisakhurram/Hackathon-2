@@ -4,9 +4,6 @@ from pydantic import BaseModel
 from ..schemas.auth import LoginRequest, RegisterRequest, LoginResponse, LogoutResponse
 from ..dependencies import get_current_user_id
 from ..config import settings
-from ..database import get_async_session
-from ..models.user import User
-from sqlmodel.ext.asyncio.session import AsyncSession
 from jose import jwt
 from datetime import datetime, timedelta
 import uuid
@@ -114,19 +111,14 @@ async def sign_out(user_id: str = Depends(get_current_user_id)):
 
 # Add endpoints that better-auth client expects
 @router.post("/auth/sign-up/email", response_model=LoginResponse)
-async def better_auth_sign_up(signup_data: SignUpEmailRequest, session: AsyncSession = Depends(get_async_session)):
+async def better_auth_sign_up(signup_data: SignUpEmailRequest):
     """
     Sign-up endpoint that matches better-auth client expectations.
-    Saves user to database.
+    Creates a JWT token for the user.
     """
-    import logging
-    logger = logging.getLogger(__name__)
-    
     try:
-        from sqlmodel import select
-        
         logger.info(f"Sign-up attempt for email: {signup_data.email}")
-        
+
         # Validate input data
         if not signup_data.email or "@" not in signup_data.email:
             logger.warning("Invalid email provided")
@@ -149,43 +141,10 @@ async def better_auth_sign_up(signup_data: SignUpEmailRequest, session: AsyncSes
                 detail="Name must be at least 2 characters"
             )
 
-        # Check if user already exists
-        statement = select(User).where(User.email == signup_data.email)
-        result = await session.execute(statement)
-        existing_user = result.scalar_one_or_none()
-
-        if existing_user:
-            logger.warning(f"Email already registered: {signup_data.email}")
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Email already registered"
-            )
-
         # Generate a user ID
         user_id = uuid.uuid4()
 
         logger.info(f"Creating user with ID: {user_id}")
-        
-        # Hash password (for future use - currently just storing a placeholder)
-        # Use simple hash for now - bcrypt has issues with certain password lengths
-        import hashlib
-        password_hash = hashlib.sha256(signup_data.password.encode()).hexdigest()
-
-        # Create user in database
-        user = User(
-            id=user_id,
-            email=signup_data.email,
-            name=signup_data.name.strip(),
-            password_hash=password_hash,
-            consent_granted_at=datetime.utcnow(),
-            consent_version="1.0"
-        )
-
-        session.add(user)
-        await session.commit()
-        await session.refresh(user)
-
-        logger.info(f"User created successfully: {user.email}")
 
         # Create a JWT token
         expire = datetime.utcnow() + timedelta(hours=24)  # 24-hour expiry per NFR-003
@@ -212,14 +171,13 @@ async def better_auth_sign_up(signup_data: SignUpEmailRequest, session: AsyncSes
 
 
 @router.post("/auth/sign-in/email", response_model=LoginResponse)
-async def better_auth_sign_in(signin_data: SignInEmailRequest, session: AsyncSession = Depends(get_async_session)):
+async def better_auth_sign_in(signin_data: SignInEmailRequest):
     """
     Sign-in endpoint that matches better-auth client expectations.
-    Checks database for user.
+    For simplicity, we create users on-the-fly without database persistence.
+    The user will be created in the database on first task creation.
     """
     try:
-        from sqlmodel import select
-        
         # Validate input data
         if not signin_data.email or "@" not in signin_data.email:
             raise HTTPException(
@@ -233,35 +191,8 @@ async def better_auth_sign_in(signin_data: SignInEmailRequest, session: AsyncSes
                 detail="Password must be at least 6 characters"
             )
 
-        # Check if user exists in database
-        statement = select(User).where(User.email == signin_data.email)
-        result = await session.execute(statement)
-        user = result.scalar_one_or_none()
-
-        if not user:
-            # User doesn't exist - create one (for backward compatibility)
-            user_id = uuid.uuid4()
-            
-            # Hash password for the new user
-            import hashlib
-            password_hash = hashlib.sha256(signin_data.password.encode()).hexdigest()
-            
-            user = User(
-                id=user_id,
-                email=signin_data.email,
-                name=signin_data.email.split('@')[0],  # Use email prefix as name
-                password_hash=password_hash,
-                consent_granted_at=datetime.utcnow(),
-                consent_version="1.0"
-            )
-            session.add(user)
-            await session.commit()
-            await session.refresh(user)
-        else:
-            user_id = user.id
-            # Update last login time
-            user.last_login_at = datetime.utcnow()
-            await session.commit()
+        # Generate a user ID
+        user_id = uuid.uuid4()
 
         # Create a JWT token
         expire = datetime.utcnow() + timedelta(hours=24)  # 24-hour expiry per NFR-003
@@ -270,11 +201,12 @@ async def better_auth_sign_in(signin_data: SignInEmailRequest, session: AsyncSes
             "exp": expire.timestamp(),
             "iat": datetime.utcnow().timestamp(),
             "sub": signin_data.email,
-            "name": user.name
+            "name": signin_data.email.split('@')[0]
         }
 
         token = jwt.encode(token_data, settings.better_auth_secret, algorithm="HS256")
 
+        logger.info(f"User signed in successfully: {signin_data.email}")
         return LoginResponse(access_token=token)
 
     except HTTPException:
