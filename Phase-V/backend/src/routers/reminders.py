@@ -8,7 +8,9 @@ from ..database import get_async_session
 from ..services.reminder_service import ReminderService
 import uuid as uuid_lib
 from datetime import datetime, timedelta
+import logging
 
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/reminders", tags=["reminders"])
 
@@ -221,3 +223,75 @@ async def get_upcoming_reminders(
     reminders = result.scalars().all()
     
     return reminders
+
+
+@router.post("/test/send-email")
+async def test_send_email(
+    user_id: str = Depends(get_current_user_id),
+    session: AsyncSession = Depends(get_async_session)
+):
+    """
+    Test endpoint to send a reminder email immediately.
+    Useful for testing the email functionality.
+    """
+    try:
+        from sqlmodel import select
+        from ..models.user import User
+        from ..models.task import Task
+        
+        user_uuid = uuid_lib.UUID(user_id)
+        
+        # Get user
+        user = session.get(User, user_uuid)
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        # Get or create a test task
+        statement = select(Task).where(Task.user_id == user_uuid)
+        result = await session.execute(statement)
+        task = result.scalar_one_or_none()
+        
+        if not task:
+            # Create a test task
+            task = Task(
+                title="Test Task for Reminder",
+                description="This is a test task to verify email reminders",
+                priority=2,
+                difficulty_level="intermediate",
+                status="pending",
+                due_date=datetime.utcnow() + timedelta(hours=1),
+                user_id=user_uuid
+            )
+            session.add(task)
+            await session.commit()
+            await session.refresh(task)
+        
+        # Create a test reminder
+        reminder = Reminder(
+            task_id=task.id,
+            scheduled_time=datetime.utcnow(),
+            method=ReminderMethod.EMAIL
+        )
+        session.add(reminder)
+        await session.commit()
+        await session.refresh(reminder)
+        
+        # Send the reminder
+        reminder_service = ReminderService()
+        success = await reminder_service.send_reminder_notification(session, reminder)
+        
+        if success:
+            return {
+                "message": "Test reminder email sent successfully!",
+                "email": user.email,
+                "task": task.title,
+                "reminder_id": str(reminder.id)
+            }
+        else:
+            raise HTTPException(status_code=500, detail="Failed to send reminder email")
+            
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error in test send email: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
