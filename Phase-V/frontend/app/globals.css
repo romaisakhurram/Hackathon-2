@@ -31,7 +31,6 @@ body {
   margin: 0;
   padding: 0;
   overflow-x: hidden;
-  -webkit-tap-highlight-color: transparent;
 }
 
 /* Responsive utilities */
@@ -39,26 +38,13 @@ body {
   .container-custom {
     @apply w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
   }
-
+  
   .text-responsive {
     @apply text-sm sm:text-base md:text-lg;
   }
-
+  
   .btn-responsive {
     @apply w-full sm:w-auto;
-  }
-  
-  /* Mobile optimizations */
-  .touch-target {
-    @apply min-h-[44px] min-w-[44px];
-  }
-  
-  .safe-area-top {
-    padding-top: env(safe-area-inset-top);
-  }
-  
-  .safe-area-bottom {
-    padding-bottom: env(safe-area-inset-bottom);
   }
 }
 
@@ -67,46 +53,10 @@ body {
   .hide-mobile {
     display: none;
   }
-  
-  /* Larger touch targets for mobile */
-  button, a, input, select, textarea {
-    min-height: 44px;
-  }
-  
-  /* Prevent text size adjustment on mobile */
-  html {
-    -webkit-text-size-adjust: 100%;
-  }
 }
 
 /* Ensure images and content don't overflow */
 img, video, canvas {
   max-width: 100%;
   height: auto;
-}
-
-/* Smooth scrolling */
-html {
-  scroll-behavior: smooth;
-}
-
-/* Remove tap highlight on mobile */
-* {
-  -webkit-tap-highlight-color: transparent;
-}
-
-/* Better form controls on mobile */
-input, textarea, select {
-  font-size: 16px; /* Prevents zoom on iOS */
-}
-
-/* Modal/Dialog responsive styles */
-@media (max-width: 640px) {
-  .modal-mobile {
-    @apply fixed inset-0 m-4 rounded-xl;
-  }
-  
-  .card-mobile {
-    @apply p-4;
-  }
 }

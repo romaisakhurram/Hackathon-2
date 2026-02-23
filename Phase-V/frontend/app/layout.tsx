@@ -1,20 +1,12 @@
 import './globals.css'
-import type { Metadata, Viewport } from 'next'
+import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'TaskFlow - Smart Task Management',
-  description: 'A professional todo application with authentication and AI-powered features',
-}
-
-export const viewport: Viewport = {
-  width: 'device-width',
-  initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
-  themeColor: '#6366f1'
+  title: 'Todo App',
+  description: 'A professional todo application with authentication',
 }
 
 export default function RootLayout({
