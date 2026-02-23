@@ -59,25 +59,89 @@ export default function SignUpPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-100 flex items-center justify-center p-4">
-      <div className="max-w-md w-full space-y-8">
-        <div className="text-center">
-          <div className="mx-auto h-16 w-16 rounded-full bg-gradient-to-r from-green-500 to-teal-600 flex items-center justify-center mb-4">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center p-3 sm:p-4">
+      <div className="w-full max-w-md">
+        <div className="text-center mb-6 sm:mb-8">
+          <div className="mx-auto h-12 w-12 sm:h-16 sm:w-16 rounded-full bg-gradient-to-r from-green-500 to-teal-600 flex items-center justify-center mb-4 shadow-lg">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 sm:h-8 sm:w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
             </svg>
           </div>
-          <h2 className="text-3xl font-bold text-slate-900">Create an account</h2>
-          <p className="mt-2 text-slate-600">
-            Join us today to start managing your tasks efficiently
+          <h2 className="text-2xl sm:text-3xl font-bold text-slate-900">Create an account</h2>
+          <p className="mt-2 text-sm sm:text-base text-slate-600 px-4">
+            Join us today to start managing your tasks
           </p>
         </div>
 
-        <div className="bg-white py-8 px-6 shadow rounded-lg sm:px-10">
-          <form className="space-y-6" onSubmit={handleSubmit}>
+        <div className="bg-white py-6 sm:py-8 px-4 sm:px-6 shadow-xl rounded-2xl border border-slate-200/50">
+          <form className="space-y-4 sm:space-y-6" onSubmit={handleSubmit}>
             <div>
-              <label htmlFor="name" className="block text-sm font-medium text-slate-700 mb-1">
+              <label htmlFor="name" className="block text-sm font-medium text-slate-700 mb-2">
                 Full name
+              </label>
+              <input
+                id="name"
+                name="name"
+                type="text"
+                autoComplete="name"
+                required
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="w-full px-4 py-3 border border-slate-300 rounded-xl shadow-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-base"
+                placeholder="John Doe"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-slate-700 mb-2">
+                Email address
+              </label>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                autoComplete="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full px-4 py-3 border border-slate-300 rounded-xl shadow-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-base"
+                placeholder="you@example.com"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium text-slate-700 mb-2">
+                Password
+              </label>
+              <input
+                id="password"
+                name="password"
+                type="password"
+                autoComplete="new-password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full px-4 py-3 border border-slate-300 rounded-xl shadow-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-base"
+                placeholder="••••••••"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="confirm-password" className="block text-sm font-medium text-slate-700 mb-2">
+                Confirm password
+              </label>
+              <input
+                id="confirm-password"
+                name="confirm-password"
+                type="password"
+                autoComplete="new-password"
+                required
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className="w-full px-4 py-3 border border-slate-300 rounded-xl shadow-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-base"
+                placeholder="••••••••"
+              />
+            </div>
               </label>
               <input
                 id="name"
